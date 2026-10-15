@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseWatch Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>PulseWatch</h1>
+        <p>System & Network Monitor</p>
+    </header>
+    <section class="history-section">
+    
+        <div class="history-header">
+            <div>
+                <h2>Historical Monitoring</h2>
+                <p>View previously recorded system metrics</p>
+            </div>
+    
+            <div class="history-controls">
+            <select id="historyRange">
+                <option value="live" selected>Live</option>
+                <option value="900">Last 15 minutes</option>
+                <option value="3600">Last 1 hour</option>
+                <option value="21600">Last 6 hours</option>
+            </select>
+    
+                <button id="refreshHistory">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    
+        <p id="historyStatus">Loading history...</p>
+    
+        <div class="history-charts">
+    
+            <div class="chart-card">
+                <h2>CPU & RAM History</h2>
+                <div class="chart-container">
+                    <canvas id="historySystemChart"></canvas>
+                </div>
+            </div>
+    
+            <div class="chart-card">
+                <h2>Network History</h2>
+                <div class="chart-container">
+                    <canvas id="historyNetworkChart"></canvas>
+                </div>
+            </div>
+    
+        </div>
+    
+    </section>
+
+    <main>
+        <div class="dashboard">
+            <div class="card">
+                <h2>CPU Usage</h2>
+                <p id="cpu">--%</p>
+            </div>
+
+            <div class="card">
+                <h2>RAM Usage</h2>
+                <p id="ram">--%</p>
+            </div>
+
+            <div class="card">
+                <h2>Disk Usage</h2>
+                <p id="disk">--%</p>
+            </div>
+
+            <div class="card">
+                <h2>Download Speed</h2>
+                <p id="download">-- Mbps</p>
+            </div>
+
+            <div class="card">
+                <h2>Upload Speed</h2>
+                <p id="upload">-- Mbps</p>
+            </div>
+        </div>
+    </main>
+    <section class="alerts-section">
+    
+        <div class="alerts-header">
+            <h2>System Alerts</h2>
+            <span id="alerts-count">0 active</span>
+        </div>
+    
+        <div id="alerts-container" aria-live="polite">
+            <p>Loading system status...</p>
+        </div>
+    
+    </section>
+    <section class="charts">
+    
+        <div class="chart-card">
+            <h2>CPU & RAM Usage</h2>
+            <div class="chart-container">
+                <canvas id="systemChart"></canvas>
+            </div>
+        </div>
+    
+        <div class="chart-card">
+            <h2>Network Traffic</h2>
+            <div class="chart-container">
+                <canvas id="networkChart"></canvas>
+            </div>
+        </div>
+    
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
