@@ -10,6 +10,12 @@ from fastapi.staticfiles import StaticFiles
 
 from app.collector import MetricsCollector
 
+from pydantic import BaseModel, Field
+
+from app.alerts import (
+    get_alert_settings,
+    save_alert_settings
+)
 
 collector = MetricsCollector()
 
@@ -108,3 +114,19 @@ def get_alerts():
         "timestamp": collector.latest_metrics["timestamp"],
         "alerts": collector.latest_metrics["alerts"]
     }
+class AlertSettings(BaseModel):
+    cpu_percent: int = Field(ge=1, le=100)
+    ram_percent: int = Field(ge=1, le=100)
+    disk_percent: int = Field(ge=1, le=100)
+
+
+@app.get("/api/alert-settings")
+def read_alert_settings():
+    return get_alert_settings()
+
+
+@app.put("/api/alert-settings")
+def update_alert_settings(settings: AlertSettings):
+    return save_alert_settings(
+        settings.model_dump()
+    )

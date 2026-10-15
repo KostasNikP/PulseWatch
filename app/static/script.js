@@ -1,5 +1,6 @@
 
 const MAX_POINTS = 30;
+const STALE_AFTER_SECONDS = 10;
 
 let lastTimestamp = null;
 
@@ -57,7 +58,7 @@ function createChart(canvasId, labels, colors, maxY = null) {
 
 
 // ==========================================
-// INITIALIZE LIVE CHARTS
+// INITIALIZE CHARTS
 // ==========================================
 
 const systemChart = createChart(
@@ -72,11 +73,6 @@ const networkChart = createChart(
     ["Download Mbps", "Upload Mbps"],
     ["#38bdf8", "#f59e0b"]
 );
-
-
-// ==========================================
-// INITIALIZE HISTORICAL CHARTS
-// ==========================================
 
 const historySystemChart = createChart(
     "historySystemChart",
@@ -93,6 +89,134 @@ const historyNetworkChart = createChart(
 
 
 // ==========================================
+// CONNECTION STATUS
+// ==========================================
+
+function setConnectionState(state) {
+    const badge = document.getElementById("connectionStatus");
+    const indicator = document.getElementById("liveIndicator");
+
+    const states = {
+        connecting: {
+            badge: "Connecting...",
+            indicator: "CONNECTING"
+        },
+        online: {
+            badge: "Connected",
+            indicator: "LIVE DATA"
+        },
+        stale: {
+            badge: "Stale Data",
+            indicator: "DATA DELAYED"
+        },
+        offline: {
+            badge: "Disconnected",
+            indicator: "OFFLINE"
+        }
+    };
+
+    const current = states[state];
+
+    if (!current) return;
+
+    if (badge && (
+        badge.dataset.state !== state ||
+        badge.textContent.trim() !== current.badge
+    )) {
+        badge.dataset.state = state;
+        badge.textContent = current.badge;
+    }
+
+    if (indicator && (
+        indicator.dataset.state !== state ||
+        indicator.textContent.trim() !== current.indicator
+    )) {
+        indicator.dataset.state = state;
+        indicator.textContent = current.indicator;
+    }
+}
+
+
+// ==========================================
+// SMART SIDEBAR NAVIGATION
+// ==========================================
+
+const navigationItems = Array.from(
+    document.querySelectorAll(".sidebar-nav a[href^='#']")
+).map(link => ({
+    link: link,
+    section: document.querySelector(link.getAttribute("href"))
+})).filter(item => item.section !== null);
+
+
+function setActiveNavigation(activeItem) {
+    navigationItems.forEach(item => {
+        const isActive = item === activeItem;
+
+        item.link.classList.toggle("active", isActive);
+
+        if (isActive) {
+            item.link.setAttribute("aria-current", "location");
+        } else {
+            item.link.removeAttribute("aria-current");
+        }
+    });
+}
+
+
+function updateActiveNavigation() {
+    if (navigationItems.length === 0) return;
+
+    const offset = Math.max(150, window.innerHeight * 0.25);
+
+    let activeItem = navigationItems[0];
+
+    navigationItems.forEach(item => {
+        const position =
+            item.section.getBoundingClientRect().top;
+
+        if (position <= offset) {
+            activeItem = item;
+        }
+    });
+
+    setActiveNavigation(activeItem);
+}
+
+
+let navigationUpdatePending = false;
+
+function scheduleNavigationUpdate() {
+    if (navigationUpdatePending) return;
+
+    navigationUpdatePending = true;
+
+    requestAnimationFrame(() => {
+        updateActiveNavigation();
+        navigationUpdatePending = false;
+    });
+}
+
+
+window.addEventListener(
+    "scroll",
+    scheduleNavigationUpdate,
+    { passive: true }
+);
+
+window.addEventListener(
+    "resize",
+    scheduleNavigationUpdate
+);
+
+navigationItems.forEach(item => {
+    item.link.addEventListener("click", () => {
+        setActiveNavigation(item);
+    });
+});
+
+
+// ==========================================
 // ADD LIVE CHART DATA
 // ==========================================
 
@@ -103,7 +227,6 @@ function addChartData(chart, label, values) {
         dataset.data.push(values[index]);
     });
 
-    // Keep only the latest 30 measurements
     if (chart.data.labels.length > MAX_POINTS) {
         chart.data.labels.shift();
 
@@ -117,7 +240,7 @@ function addChartData(chart, label, values) {
 
 
 // ==========================================
-// UPDATE HISTORICAL CHART DATA
+// UPDATE HISTORY CHART DATA
 // ==========================================
 
 function setHistoryChartData(chart, rows, fields) {
@@ -144,16 +267,11 @@ function renderAlerts(alerts) {
     const container = document.getElementById("alerts-container");
     const count = document.getElementById("alerts-count");
 
-    if (!container || !count) {
-        console.error("System Alerts HTML elements not found.");
-        return;
-    }
+    if (!container || !count) return;
 
     container.replaceChildren();
-
     count.textContent = `${alerts.length} active`;
 
-    // No active alerts
     if (alerts.length === 0) {
         const message = document.createElement("div");
 
@@ -165,7 +283,6 @@ function renderAlerts(alerts) {
         return;
     }
 
-    // Display active alerts
     alerts.forEach(alert => {
         const alertBox = document.createElement("div");
         alertBox.className = "alert-item";
@@ -178,7 +295,6 @@ function renderAlerts(alerts) {
             `Current: ${alert.value}% | Threshold: ${alert.threshold}%`;
 
         alertBox.append(title, description);
-
         container.appendChild(alertBox);
     });
 }
@@ -190,7 +306,9 @@ function renderAlerts(alerts) {
 
 async function updateDashboard() {
     try {
-        const response = await fetch("/api/metrics");
+        const response = await fetch("/api/metrics", {
+            cache: "no-store"
+        });
 
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
@@ -201,7 +319,18 @@ async function updateDashboard() {
         const system = metrics.system;
         const network = metrics.network;
 
-        // Update system cards
+        // Check measurement freshness
+        const ageSeconds =
+            Date.now() / 1000 - metrics.timestamp;
+
+        const isFresh =
+            Number.isFinite(ageSeconds) &&
+            ageSeconds >= -5 &&
+            ageSeconds <= STALE_AFTER_SECONDS;
+
+        setConnectionState(isFresh ? "online" : "stale");
+
+        // Update metric cards
         document.getElementById("cpu").textContent =
             `${system.cpu_percent}%`;
 
@@ -211,18 +340,17 @@ async function updateDashboard() {
         document.getElementById("disk").textContent =
             `${system.disk_percent}%`;
 
-        // Update network cards
         document.getElementById("download").textContent =
             `${network.download_mbps.toFixed(2)} Mbps`;
 
         document.getElementById("upload").textContent =
             `${network.upload_mbps.toFixed(2)} Mbps`;
 
-        // Update system alerts
+        // Update alerts
         renderAlerts(metrics.alerts ?? []);
 
-        // Avoid duplicate chart measurements
-        if (metrics.timestamp === lastTimestamp) {
+        // Don't add stale or duplicate measurements
+        if (!isFresh || metrics.timestamp === lastTimestamp) {
             return;
         }
 
@@ -232,19 +360,18 @@ async function updateDashboard() {
             metrics.timestamp * 1000
         ).toLocaleTimeString("el-GR");
 
-        // Update live system chart
+        // Update live charts
         addChartData(systemChart, timeLabel, [
             system.cpu_percent,
             system.ram_percent
         ]);
 
-        // Update live network chart
         addChartData(networkChart, timeLabel, [
             network.download_mbps,
             network.upload_mbps
         ]);
 
-        // Update historical charts in Live Mode
+        // Update history charts in Live Mode
         const selectedRange =
             document.getElementById("historyRange").value;
 
@@ -262,18 +389,17 @@ async function updateDashboard() {
 
     } catch (error) {
         console.error("PulseWatch update failed:", error);
+        setConnectionState("offline");
     }
 }
 
 
 // ==========================================
-// AUTOMATIC DASHBOARD REFRESH
+// AUTOMATIC REFRESH
 // ==========================================
 
 async function refreshDashboard() {
     await updateDashboard();
-
-    // Refresh every 3 seconds
     setTimeout(refreshDashboard, 3000);
 }
 
@@ -288,7 +414,6 @@ async function loadHistory() {
     const selectedRange =
         document.getElementById("historyRange").value;
 
-    // Live Mode
     if (selectedRange === "live") {
         setHistoryChartData(
             historySystemChart,
@@ -308,7 +433,6 @@ async function loadHistory() {
         return;
     }
 
-    // Historical Mode
     status.textContent = "Loading history...";
 
     try {
@@ -333,14 +457,12 @@ async function loadHistory() {
             return;
         }
 
-        // Update system history
         setHistoryChartData(
             historySystemChart,
             history,
             ["cpu_percent", "ram_percent"]
         );
 
-        // Update network history
         setHistoryChartData(
             historyNetworkChart,
             history,
@@ -366,7 +488,7 @@ async function loadHistory() {
 
 
 // ==========================================
-// HISTORICAL MONITORING CONTROLS
+// HISTORY CONTROLS
 // ==========================================
 
 document.getElementById("historyRange")
@@ -380,5 +502,7 @@ document.getElementById("refreshHistory")
 // START PULSEWATCH
 // ==========================================
 
+setConnectionState("connecting");
+updateActiveNavigation();
 loadHistory();
 refreshDashboard();
