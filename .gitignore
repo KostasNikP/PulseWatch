@@ -31,3 +31,6 @@ Thumbs.db
 # PyInstaller build artifacts
 /build/
 /dist/
+
+# Windows Installer output
+/installer/

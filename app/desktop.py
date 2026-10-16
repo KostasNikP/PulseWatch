@@ -108,18 +108,31 @@ def run_admin_helper():
     asyncio.run(main())
 
 
+
 def main():
     """Select the application startup mode."""
 
+    # Administrator Helper runs separately.
     if len(sys.argv) > 1 and sys.argv[1] == "--admin-helper":
-
-        # Start only the elevated hardware sensor helper.
         run_admin_helper()
+        return
 
-    else:
+    # Prevent multiple PulseWatch Desktop instances.
+    from app.single_instance import (
+        acquire_single_instance,
+        release_single_instance
+    )
 
-        # Start the normal Windows desktop application.
+    instance_handle = acquire_single_instance()
+
+    if instance_handle is None:
+        return
+
+    try:
         run_desktop()
+
+    finally:
+        release_single_instance(instance_handle)
 
 
 
