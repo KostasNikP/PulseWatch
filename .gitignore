@@ -27,3 +27,10 @@ Thumbs.db
 # .NET build artifacts
 **/bin/
 **/obj/
+
+# PyInstaller build artifacts
+/build/
+/dist/
+
+# Windows Installer output
+/installer/

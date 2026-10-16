@@ -6,6 +6,28 @@ PulseWatch is a local Windows monitoring application built with **Python, FastAP
 
 The project combines REST API development, background data collection, SQLite persistence, hardware discovery, and live visualization. A C# sensor bridge powered by LibreHardwareMonitor reads hardware data, while the Python backend serves it to the dashboard.
 
+## Windows Desktop Application — v0.2.0
+
+PulseWatch is also available as a standalone Windows desktop application.
+
+The desktop version includes a dedicated application window, advanced hardware monitoring, a custom application icon, persistent settings, and a Windows installer.
+
+### Download & Install
+
+1. Visit the [GitHub Releases](https://github.com/KostasNikP/PulseWatch/releases) page.
+2. Download `PulseWatch_Setup_v0.2.0.exe`.
+3. Run the installer and follow the setup instructions.
+4. Launch PulseWatch from the Start Menu or desktop shortcut.
+5. Optionally grant Administrator privileges for additional hardware sensors.
+
+**Requirements:** Windows x64 and Microsoft Edge WebView2 Runtime.
+
+Python and the .NET SDK are not required for the packaged desktop application.
+
+**Note:** The desktop installer will be available with the v0.2.0 release. Hardware sensor availability depends on device compatibility and permissions.
+
+The source-code installation instructions below remain available for developers.
+
 ## Features
 
 ### System & Network Monitoring

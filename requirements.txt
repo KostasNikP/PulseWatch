@@ -1,2 +1,4 @@
+
 fastapi[standard]
 psutil
+pywebview==6.2.1

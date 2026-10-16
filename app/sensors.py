@@ -1,12 +1,38 @@
 
 import json
 import subprocess
+import sys
+
 from collections import Counter
 from pathlib import Path
 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
+BUNDLE_DIR = Path(
+    getattr(sys, "_MEIPASS", PROJECT_DIR)
+)
+
+# Sensor Bridge included in a packaged application
+PACKAGED_BRIDGE_EXE = (
+    BUNDLE_DIR
+    / "sensor_bridge"
+    / "sensor_bridge.exe"
+)
+
+# Self-contained Sensor Bridge for development
+PUBLISHED_BRIDGE_EXE = (
+    PROJECT_DIR
+    / "sensor_bridge"
+    / "bin"
+    / "Release"
+    / "net10.0"
+    / "win-x64"
+    / "publish"
+    / "sensor_bridge.exe"
+)
+
+# Original development Sensor Bridge
 BRIDGE_DLL = (
     PROJECT_DIR
     / "sensor_bridge"
@@ -17,16 +43,31 @@ BRIDGE_DLL = (
 )
 
 
-def get_hardware_sensors():
-    """Read available sensors using the C# Sensor Bridge."""
+def get_bridge_command():
+    """Select the available hardware sensor bridge."""
 
-    if not BRIDGE_DLL.exists():
-        raise FileNotFoundError(
-            "Sensor Bridge is not built. Run dotnet build first."
-        )
+    if PACKAGED_BRIDGE_EXE.is_file():
+        return [str(PACKAGED_BRIDGE_EXE)]
+
+    if PUBLISHED_BRIDGE_EXE.is_file():
+        return [str(PUBLISHED_BRIDGE_EXE)]
+
+    if BRIDGE_DLL.is_file():
+        return ["dotnet", str(BRIDGE_DLL)]
+
+    raise FileNotFoundError(
+        "Hardware Sensor Bridge not found. "
+        "Build or publish the sensor bridge first."
+    )
+
+
+def get_hardware_sensors():
+    """Read available hardware sensors."""
+
+    command = get_bridge_command()
 
     result = subprocess.run(
-        ["dotnet", str(BRIDGE_DLL)],
+        command,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -44,7 +85,7 @@ def get_hardware_sensors():
 
 
 def iter_hardware(devices):
-    """Include nested hardware such as motherboard chips."""
+    """Include nested hardware and sensors."""
 
     for device in devices:
         yield device
@@ -58,7 +99,9 @@ if __name__ == "__main__":
     try:
         result = get_hardware_sensors()
 
-        devices = list(iter_hardware(result["hardware"]))
+        devices = list(
+            iter_hardware(result["hardware"])
+        )
 
         sensor_count = sum(
             len(device["sensors"])
@@ -75,7 +118,9 @@ if __name__ == "__main__":
 
         print("\nDetected hardware categories:")
 
-        for category, count in sorted(categories.items()):
+        for category, count in sorted(
+            categories.items()
+        ):
             print(f"  {category}: {count}")
 
     except (

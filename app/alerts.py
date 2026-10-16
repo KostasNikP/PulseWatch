@@ -1,14 +1,11 @@
 
 import json
-from pathlib import Path
 from threading import Lock
 
+from app.paths import DATA_DIR
 
-CONFIG_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "data"
-    / "alert_settings.json"
-)
+
+CONFIG_PATH = DATA_DIR / "alert_settings.json"
 
 DEFAULT_THRESHOLDS = {
     "cpu_percent": 90,

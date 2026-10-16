@@ -6,7 +6,7 @@ import sqlite3
 import time
 
 from contextlib import aclosing
-from pathlib import Path
+from app.paths import DATA_DIR
 
 from app.alerts import AlertMonitor
 from app.monitor import get_system_metrics, NetworkMonitor
@@ -25,13 +25,7 @@ SAVE_INTERVAL = 30
 SENSOR_RETRY_INTERVAL = 5
 SENSOR_STALE_SECONDS = 10
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-ADMIN_SENSOR_FILE = (
-    PROJECT_ROOT
-    / "data"
-    / "hardware_sensors_live.json"
-)
+ADMIN_SENSOR_FILE = DATA_DIR / "hardware_sensors_live.json"
 
 
 # ==========================================
