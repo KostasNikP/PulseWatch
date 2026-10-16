@@ -1,13 +1,17 @@
+
 import sqlite3
-from pathlib import Path
+
+from app.paths import DATA_DIR
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "data" / "pulsewatch.db"
+DB_PATH = DATA_DIR / "pulsewatch.db"
 
 
 def init_database():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     connection = sqlite3.connect(DB_PATH)
 
@@ -60,6 +64,8 @@ def save_metrics(metrics):
 
     finally:
         connection.close()
+
+
 def get_metrics_history(limit=100, since=None):
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
@@ -85,10 +91,17 @@ def get_metrics_history(limit=100, since=None):
         query += " ORDER BY timestamp DESC, id DESC LIMIT ?"
         parameters.append(limit)
 
-        cursor = connection.execute(query, parameters)
+        cursor = connection.execute(
+            query,
+            parameters
+        )
+
         rows = cursor.fetchall()
 
-        return [dict(row) for row in reversed(rows)]
+        return [
+            dict(row)
+            for row in reversed(rows)
+        ]
 
     finally:
         connection.close()

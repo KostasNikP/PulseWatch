@@ -7,17 +7,13 @@ import time
 import urllib.error
 import urllib.request
 
-from pathlib import Path
+from app.paths import DATA_DIR
 from contextlib import aclosing
 
 from app.sensor_stream import stream_hardware_sensors
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-SENSOR_FILE = (
-    PROJECT_ROOT / "data" / "hardware_sensors_live.json"
-)
+SENSOR_FILE = DATA_DIR / "hardware_sensors_live.json"
 
 SERVER_URL = "http://127.0.0.1:8000/api/metrics"
 

@@ -2,18 +2,17 @@
 import asyncio
 import json
 import subprocess
+
 from contextlib import aclosing
 
-from app.sensors import BRIDGE_DLL, iter_hardware
+from app.sensors import get_bridge_command, iter_hardware
 
 
 async def stream_hardware_sensors():
-    """Read continuous hardware snapshots from the C# bridge."""
+    """Read continuous hardware sensor measurements."""
 
-    if not BRIDGE_DLL.is_file():
-        raise FileNotFoundError(
-            "Sensor Bridge is not built. Run dotnet build first."
-        )
+    # Automatically choose the available Sensor Bridge.
+    command = get_bridge_command()
 
     options = {}
 
@@ -21,8 +20,7 @@ async def stream_hardware_sensors():
         options["creationflags"] = subprocess.CREATE_NO_WINDOW
 
     process = await asyncio.create_subprocess_exec(
-        "dotnet",
-        str(BRIDGE_DLL),
+        *command,
         "--stream",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
@@ -40,7 +38,10 @@ async def stream_hardware_sensors():
             if not line:
                 error = (
                     await process.stderr.read()
-                ).decode("utf-8", errors="replace").strip()
+                ).decode(
+                    "utf-8",
+                    errors="replace"
+                ).strip()
 
                 raise RuntimeError(
                     error or "Sensor Bridge stopped unexpectedly."
@@ -49,6 +50,7 @@ async def stream_hardware_sensors():
             yield json.loads(line)
 
     finally:
+        # Stop Sensor Bridge when monitoring ends.
         if process.returncode is None:
             process.terminate()
 
@@ -57,6 +59,7 @@ async def stream_hardware_sensors():
                 process.wait(),
                 timeout=5
             )
+
         except asyncio.TimeoutError:
             process.kill()
             await process.wait()
