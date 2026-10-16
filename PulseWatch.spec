@@ -29,6 +29,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='PulseWatch',
+    icon='assets/PulseWatch.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
