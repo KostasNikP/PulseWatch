@@ -36,6 +36,11 @@
                         Overview
                     </a>
 
+                    <a href="#hardware" class="nav-item">
+                        <span class="nav-icon">▣</span>
+                        Hardware Monitor
+                    </a>
+
                     <a href="#live-charts" class="nav-item">
                         <span class="nav-icon">⌁</span>
                         Live Monitoring
@@ -94,62 +99,7 @@
 
             <main class="main-content">
 
-                <!-- ALERT SETTINGS -->
-                <section id="alert-settings" class="settings-section">
                 
-                    <div class="section-heading">
-                        <div>
-                            <h2>Alert Settings</h2>
-                            <p>Configure system warning thresholds</p>
-                        </div>
-                    </div>
-                
-                    <div class="settings-card">
-                
-                        <form id="alertSettingsForm">
-                
-                            <div class="threshold-control">
-                                <label for="cpuThreshold">
-                                    CPU Usage
-                                    <output id="cpuThresholdValue">90%</output>
-                                </label>
-                
-                                <input type="range" id="cpuThreshold" min="1" max="100" value="90">
-                            </div>
-                
-                            <div class="threshold-control">
-                                <label for="ramThreshold">
-                                    RAM Usage
-                                    <output id="ramThresholdValue">85%</output>
-                                </label>
-                
-                                <input type="range" id="ramThreshold" min="1" max="100" value="85">
-                            </div>
-                
-                            <div class="threshold-control">
-                                <label for="diskThreshold">
-                                    Disk Usage
-                                    <output id="diskThresholdValue">90%</output>
-                                </label>
-                
-                                <input type="range" id="diskThreshold" min="1" max="100" value="90">
-                            </div>
-                
-                            <div class="settings-actions">
-                                <p id="settingsStatus" role="status" aria-live="polite">
-                                    Loading settings...
-                                </p>
-                
-                                <button type="submit" id="saveSettings" disabled>
-                                    Save Settings
-                                </button>
-                            </div>
-                
-                        </form>
-                
-                    </div>
-                
-                </section>
 
                 <!-- METRICS OVERVIEW -->
                 <section id="overview" class="overview-section">
@@ -237,6 +187,62 @@
                     </div>
 
                 </section>
+
+                <!-- HARDWARE MONITOR -->
+                <section id="hardware" class="hardware-section">
+                
+                    <div class="section-heading">
+                        <div>
+                            <h2>Hardware Monitor</h2>
+                            <p>
+                                Real-time hardware sensors and device information
+                            </p>
+                        </div>
+                
+                        <div class="hardware-actions">
+                        
+                            <button id="customizeSensors" type="button" class="hardware-customize-button">
+                                Customize Sensors
+                            </button>
+                        
+                            <span id="hardwareStatus" class="live-indicator" data-state="connecting">
+                                CONNECTING
+                            </span>
+                        
+                        </div>
+                    </div>
+                
+                    <div id="hardware-container" class="hardware-container">
+                        <p>Loading hardware sensors...</p>
+                    </div>
+                
+                </section>
+
+                <!-- SENSOR CUSTOMIZATION DIALOG -->
+                <dialog id="sensorSettingsDialog" class="sensor-settings-dialog" aria-labelledby="sensorSettingsTitle">
+                    <div class="sensor-settings-content">
+                
+                        <div class="sensor-settings-header">
+                            <h3 id="sensorSettingsTitle">
+                                Customize Sensors
+                            </h3>
+                
+                            <button type="button" id="closeSensorSettings" aria-label="Close sensor settings">
+                                ×
+                            </button>
+                        </div>
+                
+                        <p>
+                            Choose which hardware sensors appear
+                            on your dashboard.
+                        </p>
+                
+                        <div id="sensorSettingsList">
+                            Sensor selection will appear here.
+                        </div>
+                
+                    </div>
+                </dialog>
 
 
                 <!-- LIVE MONITORING -->
@@ -372,6 +378,63 @@
 
                 </section>
 
+                <!-- ALERT SETTINGS -->
+                <section id="alert-settings" class="settings-section">
+                
+                    <div class="section-heading">
+                        <div>
+                            <h2>Alert Settings</h2>
+                            <p>Configure system warning thresholds</p>
+                        </div>
+                    </div>
+                
+                    <div class="settings-card">
+                
+                        <form id="alertSettingsForm">
+                
+                            <div class="threshold-control">
+                                <label for="cpuThreshold">
+                                    CPU Usage
+                                    <output id="cpuThresholdValue">90%</output>
+                                </label>
+                
+                                <input type="range" id="cpuThreshold" min="1" max="100" value="90">
+                            </div>
+                
+                            <div class="threshold-control">
+                                <label for="ramThreshold">
+                                    RAM Usage
+                                    <output id="ramThresholdValue">85%</output>
+                                </label>
+                
+                                <input type="range" id="ramThreshold" min="1" max="100" value="85">
+                            </div>
+                
+                            <div class="threshold-control">
+                                <label for="diskThreshold">
+                                    Disk Usage
+                                    <output id="diskThresholdValue">90%</output>
+                                </label>
+                
+                                <input type="range" id="diskThreshold" min="1" max="100" value="90">
+                            </div>
+                
+                            <div class="settings-actions">
+                                <p id="settingsStatus" role="status" aria-live="polite">
+                                    Loading settings...
+                                </p>
+                
+                                <button type="submit" id="saveSettings" disabled>
+                                    Save Settings
+                                </button>
+                            </div>
+                
+                        </form>
+                
+                    </div>
+                
+                </section>
+
             </main>
 
 
@@ -399,6 +462,7 @@
 <!-- Notifications -->
 <script src="/static/notifications.js"></script>
 <script src="/static/settings.js"></script>
+<script src="/static/hardware.js"></script>
 
 </body>
 

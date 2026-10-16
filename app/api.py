@@ -3,10 +3,11 @@ from app.database import get_metrics_history
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
-
+from app.hardware_discovery import get_hardware_inventory
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
 
 from app.collector import MetricsCollector
 
@@ -130,3 +131,29 @@ def update_alert_settings(settings: AlertSettings):
     return save_alert_settings(
         settings.model_dump()
     )
+@app.get("/api/hardware")
+def hardware_inventory():
+    hardware = get_hardware_inventory()
+
+    if "error" in hardware:
+        raise HTTPException(
+            status_code=503,
+            detail=hardware["error"]
+        )
+
+    return hardware
+
+@app.get("/api/sensors")
+def hardware_sensors():
+    snapshot = collector.latest_hardware_sensors
+
+    if snapshot is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                collector.hardware_sensors_error
+                or "Hardware sensors are starting..."
+            )
+        )
+
+    return snapshot

@@ -164,24 +164,44 @@ function setActiveNavigation(activeItem) {
 }
 
 
+
 function updateActiveNavigation() {
     if (navigationItems.length === 0) return;
 
-    const offset = Math.max(150, window.innerHeight * 0.25);
+    const offset = Math.max(
+        150,
+        window.innerHeight * 0.25
+    );
 
-    let activeItem = navigationItems[0];
+    let activeItem = null;
+    let closestPosition = -Infinity;
+
+    let firstItem = null;
+    let firstPosition = Infinity;
 
     navigationItems.forEach(item => {
         const position =
             item.section.getBoundingClientRect().top;
 
-        if (position <= offset) {
+        // Find the first section on the page
+        if (position < firstPosition) {
+            firstPosition = position;
+            firstItem = item;
+        }
+
+        // Find the section closest to the active viewport area
+        if (
+            position <= offset &&
+            position > closestPosition
+        ) {
+            closestPosition = position;
             activeItem = item;
         }
     });
 
-    setActiveNavigation(activeItem);
+    setActiveNavigation(activeItem ?? firstItem);
 }
+
 
 
 let navigationUpdatePending = false;
