@@ -18,7 +18,7 @@ const search = document.getElementById("pwCustomizeSearch");
 const catalog = {cpu:new Map(),gpu:new Map()};
 const cards = new Map();
 let state = {selected:{cpu:null,gpu:null},layout:{}};
-let draft = null, category = "cpu", draggingId = null, inventorySig = "";
+let draft = null, category = "cpu", inventorySig = "";
 let lastSnapshot = null;
 const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
 const el = (tag,cls,text) => {
@@ -96,11 +96,13 @@ function modeOf(card,mode) {
 }
 function createCard(item) {
     const node=el("article","pw-mini-widget");
-    node.draggable=true;
     node.dataset.sensorId=item.id;
     const header=el("div","pw-mini-header");
     const grip=el("span","pw-mini-grip","⠿");
     grip.title="Drag to reorder";
+    grip.tabIndex = 0;
+    grip.setAttribute("role", "button");
+    grip.setAttribute("aria-label", "Move " + item.name + " widget. Use left or right arrow keys to reorder.");
     const title=el("div","pw-mini-title");
     title.append(el("strong","",item.name),el("small","",item.type));
     const buttons=el("div","pw-mini-buttons");
@@ -158,29 +160,91 @@ function createCard(item) {
         state.selected[item.group]=state.selected[item.group].filter(id=>id!==item.id);
         save();render(item.group);
     });
-    // Drag the header to arrange panels horizontally or vertically.
-    grip.draggable=true;
-    node.addEventListener("dragstart",e=>{
-        if(resizing){e.preventDefault();return;}
-        draggingId=item.id;
+    // Pointer-based drag works in both WebView2 and Chrome. Move only
+    // from the handle, avoiding accidental drags when using buttons.
+    let moveSession = null;
+    function removeMovePreview() {
+        for (const other of regions[item.group].querySelectorAll(
+            ".pw-mini-drop-before, .pw-mini-drop-after"
+        )) {
+            other.classList.remove("pw-mini-drop-before", "pw-mini-drop-after");
+        }
+        regions[item.group].classList.remove("pw-mini-drop-end");
+    }
+
+    grip.addEventListener("pointerdown", e => {
+        if (e.button !== 0 || resizing) return;
+        e.preventDefault();
+        grip.setPointerCapture(e.pointerId);
+        moveSession = {
+            pointerId: e.pointerId, startX: e.clientX, startY: e.clientY,
+            active: false, targetId: null, after: false, inside: false
+        };
+    });
+    grip.addEventListener("pointermove", e => {
+        const drag = moveSession;
+        if (!drag || e.pointerId !== drag.pointerId) return;
+        if (!drag.active && Math.hypot(
+            e.clientX - drag.startX,
+            e.clientY - drag.startY
+        ) < 6) return;
+        drag.active = true;
         node.classList.add("is-dragging");
-        if(e.dataTransfer) {
-            e.dataTransfer.effectAllowed="move";
-            e.dataTransfer.setData("text/plain",item.id);
+        grip.classList.add("is-moving");
+        removeMovePreview();
+
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const region = hit && hit.closest(".pw-mini-region");
+        drag.inside = region === regions[item.group];
+        drag.targetId = null;
+        if (!drag.inside) return;
+
+        const target = hit.closest(".pw-mini-widget");
+        if (target && target !== node) {
+            drag.targetId = target.dataset.sensorId;
+            const bounds = target.getBoundingClientRect();
+            drag.after = e.clientX >= bounds.left + bounds.width / 2;
+            target.classList.add(
+                drag.after ? "pw-mini-drop-after" : "pw-mini-drop-before"
+            );
+        } else if (!target) {
+            // Dropping in an empty area moves the card to the end.
+            drag.after = true;
+            regions[item.group].classList.add("pw-mini-drop-end");
+        } else {
+            drag.inside = false;
         }
     });
-    node.addEventListener("dragend",()=>{draggingId=null;node.classList.remove("is-dragging");});
-    node.addEventListener("dragover",e=>{
-        if(draggingId&&draggingId!==item.id&&draggingId.startsWith(item.group+":"))
-            e.preventDefault();
+    function finishMove(commit) {
+        if (!moveSession) return;
+        const drag = moveSession;
+        moveSession = null;
+        node.classList.remove("is-dragging");
+        grip.classList.remove("is-moving");
+        removeMovePreview();
+        if (!commit || !drag.active || !drag.inside) return;
+        moveWidget(item.group, item.id, drag.targetId, drag.after);
+    }
+    grip.addEventListener("pointerup", e => {
+        if (moveSession && e.pointerId === moveSession.pointerId) {
+            finishMove(true);
+        }
     });
-    node.addEventListener("drop",e=>{
-        if(!draggingId||draggingId===item.id||!draggingId.startsWith(item.group+":"))return;
+    grip.addEventListener("pointercancel", () => finishMove(false));
+    grip.addEventListener("lostpointercapture", () => finishMove(false));
+
+    // Keyboard support for reordering without a mouse.
+    grip.addEventListener("keydown", e => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" &&
+            e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
         e.preventDefault();
-        const order=state.selected[item.group],from=order.indexOf(draggingId),to=order.indexOf(item.id);
-        if(from<0||to<0)return;
-        order.splice(from,1);order.splice(to,0,draggingId);
-        save();render(item.group);
+        const order = state.selected[item.group] || [];
+        const current = order.indexOf(item.id);
+        const direction = ["ArrowRight", "ArrowDown"].includes(e.key) ? 1 : -1;
+        const targetId = order[current + direction];
+        if (current < 0 || !targetId) return;
+        moveWidget(item.group, item.id, targetId, direction > 0);
+        grip.focus();
     });
     let resizing=null;
     corner.addEventListener("pointerdown",e=>{
@@ -188,7 +252,6 @@ function createCard(item) {
         e.preventDefault();e.stopPropagation();
         const box=node.getBoundingClientRect();
         resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height};
-        node.draggable=false;
         corner.setPointerCapture(e.pointerId);
         corner.classList.add("is-resizing");
     });
@@ -203,7 +266,7 @@ function createCard(item) {
     });
     function finish() {
         if(!resizing)return;
-        resizing=null;node.draggable=true;
+        resizing=null;
         corner.classList.remove("is-resizing");
         state.layout[item.id]={...(state.layout[item.id]||{}),
             width:Math.round(node.getBoundingClientRect().width),
@@ -215,6 +278,31 @@ function createCard(item) {
     corner.addEventListener("lostpointercapture",finish);
     return card;
 }
+// Change only the order array. Width, height, selected sensors and graphs
+// are preserved because each widget DOM node remains mounted.
+function moveWidget(group, movingId, targetId, after) {
+    const order = state.selected[group];
+    if (!Array.isArray(order)) return;
+    const oldIndex = order.indexOf(movingId);
+    if (oldIndex === -1) return;
+    if (targetId === movingId) return;
+
+    order.splice(oldIndex, 1);
+    if (!targetId) {
+        order.push(movingId);
+    } else {
+        const targetIndex = order.indexOf(targetId);
+        if (targetIndex < 0) {
+            order.splice(oldIndex, 0, movingId);
+            return;
+        }
+        order.splice(targetIndex + (after ? 1 : 0), 0, movingId);
+    }
+
+    save();
+    render(group);
+}
+
 function render(group) {
     const container=regions[group];
     const order=state.selected[group]||[];

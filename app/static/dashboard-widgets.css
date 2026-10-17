@@ -70,3 +70,27 @@
 .pw-customize-footer button {border-radius:7px;border:1px solid #3b566d;background:#1a2b3b;color:#d6e7f6;cursor:pointer;padding:9px 14px;}
 #pwCustomizeApply {background:#39cfff;color:#091721;border-color:#39cfff;font-weight:700;}
 @media(max-width:700px) {.pw-customize-body {grid-template-columns:1fr;}.pw-customize-nav {flex-direction:row;border-right:0;border-bottom:1px solid #304051;}.pw-customize-footer {flex-wrap:wrap;}}
+
+/* Drag previews for individually sized CPU and GPU sensor panels */
+.pw-mini-grip {
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+    border-radius: 4px;
+}
+.pw-mini-grip.is-moving { cursor: grabbing; color: var(--mini-accent); }
+.pw-mini-grip:focus-visible { outline: 2px solid var(--mini-accent); outline-offset: 3px; }
+.pw-mini-widget.is-dragging { opacity: .72; }
+.pw-mini-widget.pw-mini-drop-before {
+    box-shadow: inset 4px 0 0 var(--mini-accent);
+    border-color: var(--mini-accent);
+}
+.pw-mini-widget.pw-mini-drop-after {
+    box-shadow: inset -4px 0 0 var(--mini-accent);
+    border-color: var(--mini-accent);
+}
+.pw-mini-region.pw-mini-drop-end {
+    outline: 1px dashed var(--mini-accent);
+    outline-offset: 3px;
+    border-radius: 9px;
+}
