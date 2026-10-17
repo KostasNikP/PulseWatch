@@ -88,7 +88,19 @@ def run_desktop():
         print("Opening PulseWatch Desktop...")
 
         # Run the desktop GUI on the main thread.
-        webview.start(debug=False)
+        
+        # Persistent storage for dashboard preferences
+        from app.paths import DATA_DIR
+
+        webview_storage = DATA_DIR / "webview"
+        webview_storage.mkdir(parents=True, exist_ok=True)
+
+        webview.start(
+            debug=False,
+            private_mode=False,
+            storage_path=str(webview_storage)
+        )
+
 
     finally:
         # Stop the backend when the window closes.

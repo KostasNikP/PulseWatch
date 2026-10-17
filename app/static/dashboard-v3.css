@@ -1,0 +1,871 @@
+/* ==========================================
+   PULSEWATCH v0.3.0
+   DASHBOARD DESIGN SYSTEM
+   ========================================== */
+
+:root {
+    color-scheme: dark;
+
+    /* Backgrounds */
+    --bg-primary: #080d14;
+    --bg-sidebar: #0b121c;
+    --bg-card: #111a26;
+    --bg-card-hover: #162231;
+
+    /* Borders */
+    --border: #253344;
+    --border-light: #34475b;
+
+    /* Typography */
+    --text-primary: #f1f5fa;
+    --text-secondary: #9bacc0;
+    --text-muted: #687d94;
+
+    /* Accent */
+    --accent: #29b6ff;
+    --accent-soft: rgba(41, 182, 255, 0.12);
+
+    /* Hardware colors */
+    --cpu-color: #ff9e45;
+    --gpu-color: #39cfff;
+    --ram-color: #b782ff;
+    --storage-color: #36d6c2;
+    --network-color: #7b8dff;
+
+    /* Status */
+    --success: #35db96;
+    --warning: #ffbd59;
+    --danger: #ff6876;
+
+    /* Layout */
+    --radius: 16px;
+    --panel-gap: 18px;
+}
+
+/* ==========================================
+   GLOBAL
+   ========================================== */
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: "Segoe UI", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+    grid-template-columns: 248px minmax(0, 1fr);
+}
+
+/* ==========================================
+   SIDEBAR
+   ========================================== */
+
+.sidebar {
+    background: linear-gradient(180deg,
+            #0d1622 0%,
+            #080e16 100%);
+
+    border-right: 1px solid var(--border);
+    padding: 28px 14px 20px;
+}
+
+.brand {
+    margin-bottom: 48px;
+}
+
+.brand-icon {
+    background: linear-gradient(135deg,
+            #1766a4,
+            #29b6ff);
+
+    color: #ffffff;
+    border-radius: 12px;
+
+    box-shadow:
+        0 0 24px rgba(41, 182, 255, 0.15);
+}
+
+.brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+}
+
+.brand-subtitle {
+    color: var(--text-muted);
+    letter-spacing: 1.4px;
+}
+
+.sidebar-nav {
+    gap: 6px;
+}
+
+.nav-item {
+    border: 1px solid transparent;
+    border-radius: 11px;
+    padding: 13px 14px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.nav-item:hover {
+    background: #172638;
+    color: #ffffff;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg,
+            #16447f,
+            #112c52);
+
+    border-color: #1d5797;
+    color: #e7f6ff;
+
+    box-shadow:
+        inset 3px 0 0 var(--accent);
+}
+
+.sidebar-bottom {
+    border-color: var(--border);
+}
+
+/* ==========================================
+   TOP HEADER
+   ========================================== */
+
+.topbar {
+    background: rgba(8, 13, 20, 0.97);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 34px;
+}
+
+.topbar h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.topbar p {
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   MAIN CONTENT
+   ========================================== */
+
+.main-content {
+    max-width: 1800px;
+    padding: 30px 34px 60px;
+}
+
+.main-content section+section {
+    margin-top: 40px;
+}
+
+.section-heading h2 {
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.4px;
+}
+
+.section-heading p {
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   SHARED PANEL DESIGN
+   ========================================== */
+
+.card,
+.chart-card,
+.settings-card {
+    background: linear-gradient(145deg,
+            #121d2b 0%,
+            #0d1520 100%);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.metric-card {
+    padding: 22px;
+}
+
+.metric-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+}
+
+.metric-value {
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+}
+
+.metric-icon {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 9px;
+}
+
+/* ==========================================
+   CHARTS
+   ========================================== */
+
+.chart-card {
+    padding: 24px;
+}
+
+.chart-heading h3 {
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.chart-container {
+    min-height: 260px;
+}
+
+/* ==========================================
+   STATUS INDICATORS
+   ========================================== */
+
+.environment-badge {
+    background: #101d29;
+    border-color: #294058;
+    border-radius: 20px;
+}
+
+.live-indicator {
+    background: rgba(53, 219, 150, 0.08);
+    border-color: rgba(53, 219, 150, 0.2);
+}
+
+/* ==========================================
+   RESPONSIVE LAYOUT
+   ========================================== */
+
+@media (max-width: 1100px) {
+    .app-layout {
+        grid-template-columns: 210px minmax(0, 1fr);
+    }
+
+    .main-content {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: static;
+        height: auto;
+        padding: 18px;
+    }
+
+    .topbar {
+        padding: 22px;
+    }
+}
+/* ==========================================
+   PULSEWATCH v0.3 — OVERVIEW GRID
+   ========================================== */
+
+.overview-section .dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+}
+
+/* ==========================================
+   CPU PERFORMANCE WIDGET
+   ========================================== */
+
+.pw3-cpu-card {
+    grid-column: 1 / -1;
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+
+    padding: 26px;
+
+    background: linear-gradient(145deg,
+            #141b25 0%,
+            #0c111a 100%);
+
+    border: 1px solid #35404c;
+    border-radius: 16px;
+
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+/* Subtle orange background glow */
+
+.pw3-cpu-card::before {
+    content: "";
+    position: absolute;
+    top: -100px;
+    left: -100px;
+
+    width: 350px;
+    height: 250px;
+
+    background: radial-gradient(circle,
+            rgba(255, 152, 48, 0.09),
+            transparent 70%);
+
+    pointer-events: none;
+}
+
+.pw3-cpu-card:hover {
+    background: linear-gradient(145deg,
+            #161e29,
+            #0c111a);
+
+    border-color: #755033;
+}
+
+/* ==========================================
+   CPU HEADER
+   ========================================== */
+
+.pw3-cpu-header {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+
+    margin-bottom: 26px;
+}
+
+.pw3-cpu-title {
+    min-width: 0;
+}
+
+.pw3-cpu-category {
+    display: block;
+
+    color: #ff9e45;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.7px;
+
+    margin-bottom: 6px;
+}
+
+.pw3-cpu-title h3 {
+    margin: 0;
+
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.pw3-cpu-title p {
+    margin: 5px 0 0;
+
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   VIEW MODE SELECTOR — VISUAL STYLE
+   ========================================== */
+
+.pw3-view-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+
+    padding: 4px;
+
+    background: #101720;
+    border: 1px solid #34404f;
+    border-radius: 11px;
+}
+
+.pw3-view-switch button {
+    padding: 8px 13px;
+
+    color: #9bacc0;
+    font-size: 12px;
+    font-weight: 500;
+
+    border-radius: 8px;
+    white-space: nowrap;
+    border: none;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pw3-view-switch .active {
+    background: #ff9e45;
+    color: #15100b;
+    font-weight: 700;
+
+    box-shadow: 0 0 16px rgba(255, 158, 69, 0.2);
+}
+
+/* ==========================================
+   CPU LIVE METRICS
+   ========================================== */
+
+.pw3-cpu-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+
+    margin-bottom: 20px;
+}
+
+.pw3-cpu-stat {
+    min-width: 0;
+
+    padding: 16px 18px;
+
+    background: rgba(8, 13, 20, 0.55);
+    border: 1px solid #25313e;
+    border-radius: 11px;
+}
+
+.pw3-cpu-stat span {
+    display: block;
+
+    color: #9bacc0;
+    font-size: 12px;
+
+    margin-bottom: 8px;
+}
+
+.pw3-cpu-stat strong {
+    display: block;
+
+    color: #f1f5fa;
+    font-size: clamp(18px, 2vw, 26px);
+    font-weight: 700;
+    letter-spacing: -0.6px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.pw3-cpu-stat:first-child strong {
+    color: #ff9e45;
+}
+
+/* ==========================================
+   LIVE CPU CHART
+   ========================================== */
+
+.pw3-cpu-chart-container {
+    position: relative;
+
+    width: 100%;
+    height: 240px;
+    min-width: 0;
+
+    overflow: hidden;
+
+    background: linear-gradient(180deg,
+            rgba(255, 158, 69, 0.025),
+            rgba(8, 13, 20, 0.1));
+
+    border: 1px solid #26313d;
+    border-radius: 12px;
+
+    padding: 12px;
+}
+
+.pw3-cpu-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ==========================================
+   RESPONSIVE CPU WIDGET
+   ========================================== */
+
+@media (max-width: 1100px) {
+    .overview-section .dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .overview-section .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .pw3-cpu-card {
+        padding: 18px;
+    }
+
+    .pw3-cpu-header {
+        flex-direction: column;
+    }
+
+    .pw3-view-switch {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .pw3-cpu-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .pw3-cpu-chart-container {
+        height: 210px;
+    }
+}
+/* ==========================================
+   PULSEWATCH v0.3 — CPU DISPLAY MODES
+   ========================================== */
+
+/* Make hidden views truly invisible */
+
+.pw3-cpu-gauge-view[hidden],
+.pw3-cpu-chart-container[hidden] {
+    display: none !important;
+}
+
+/* ==========================================
+   GAUGE VIEW
+   ========================================== */
+
+.pw3-cpu-gauge-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 18px;
+    min-height: 280px;
+    padding: 24px;
+
+    background: linear-gradient(145deg,
+            rgba(255, 158, 69, 0.035),
+            rgba(8, 13, 20, 0.2));
+
+    border: 1px solid #293541;
+    border-radius: 12px;
+}
+
+.pw3-cpu-gauge-ring {
+    --cpu-gauge-angle: 0deg;
+
+    position: relative;
+
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+
+    display: grid;
+    place-items: center;
+
+    background: conic-gradient(from -90deg,
+            #ff9e45 0deg,
+            #ff9e45 var(--cpu-gauge-angle),
+            #26313e var(--cpu-gauge-angle),
+            #26313e 360deg);
+
+    box-shadow:
+        0 0 35px rgba(255, 158, 69, 0.08);
+}
+
+.pw3-cpu-gauge-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 78%;
+    height: 78%;
+
+    background: #0e1620;
+    border-radius: 50%;
+}
+
+.pw3-cpu-gauge-center strong {
+    color: #ffffff;
+
+    font-size: 42px;
+    font-weight: 750;
+    letter-spacing: -1.5px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.pw3-cpu-gauge-center span {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.pw3-cpu-gauge-view p {
+    margin: 0;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Gauge uses half of the dashboard grid */
+
+.pw3-cpu-card[data-view="gauge"] {
+    grid-column: span 2;
+}
+
+/* ==========================================
+   COMPACT VIEW
+   ========================================== */
+
+.pw3-cpu-card[data-view="compact"] {
+    grid-column: span 2;
+    padding: 20px;
+}
+
+.pw3-cpu-card[data-view="compact"] .pw3-cpu-header {
+    margin-bottom: 18px;
+}
+
+.pw3-cpu-card[data-view="compact"] .pw3-cpu-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.pw3-cpu-card[data-view="compact"] .pw3-cpu-stat {
+    padding: 12px;
+}
+
+.pw3-cpu-card[data-view="compact"] .pw3-cpu-stat strong {
+    font-size: 19px;
+}
+
+/* ==========================================
+   GRAPH VIEW
+   ========================================== */
+
+.pw3-cpu-card[data-view="graph"] {
+    grid-column: 1 / -1;
+}
+
+/* ==========================================
+   RESPONSIVE DISPLAY MODES
+   ========================================== */
+
+@media (max-width: 1100px) {
+
+    .pw3-cpu-card[data-view="gauge"],
+    .pw3-cpu-card[data-view="compact"] {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 700px) {
+    .pw3-cpu-gauge-ring {
+        width: 185px;
+        height: 185px;
+    }
+
+    .pw3-cpu-gauge-center strong {
+        font-size: 34px;
+    }
+
+    .pw3-cpu-card[data-view="compact"] .pw3-cpu-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .pw3-cpu-card[data-view="gauge"],
+    .pw3-cpu-card[data-view="compact"] {
+        grid-column: 1 / -1;
+    }
+}
+/* ==========================================
+   PULSEWATCH v0.3 — CPU EXPAND CONTROLS
+   ========================================== */
+
+.pw3-cpu-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pw3-expand-button {
+    padding: 10px 15px;
+
+    color: #dce8f5;
+    background: #172333;
+
+    border: 1px solid #36495d;
+    border-radius: 9px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.pw3-expand-button:hover {
+    background: #21344a;
+    border-color: #ff9e45;
+}
+
+/* ==========================================
+   EXPANDED CPU WIDGET
+   ========================================== */
+
+body.pw3-overlay-open {
+    overflow: hidden;
+}
+
+.pw3-cpu-card.pw3-expanded {
+    position: fixed;
+
+    inset: 4vh 4vw;
+
+    width: auto;
+    height: auto;
+
+    z-index: 9999;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 30px;
+
+    overflow: auto;
+
+    background: #101823;
+    border: 1px solid #5a493b;
+    border-radius: 18px;
+
+    box-shadow:
+        0 0 0 100vmax rgba(0, 0, 0, 0.78),
+        0 25px 80px rgba(0, 0, 0, 0.5);
+}
+
+/* Larger graph inside expanded panel */
+
+.pw3-cpu-card.pw3-expanded .pw3-cpu-chart-container:not([hidden]) {
+    flex: 1;
+    min-height: 300px;
+    height: auto;
+}
+
+/* Center the gauge in expanded mode */
+
+.pw3-cpu-card.pw3-expanded .pw3-cpu-gauge-view:not([hidden]) {
+    flex: 1;
+    min-height: 320px;
+}
+
+/* Larger live metrics */
+
+.pw3-cpu-card.pw3-expanded .pw3-cpu-stat strong {
+    font-size: clamp(22px, 2.6vw, 34px);
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 700px) {
+
+    .pw3-cpu-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .pw3-cpu-card.pw3-expanded {
+        inset: 10px;
+        padding: 18px;
+    }
+
+    .pw3-cpu-card.pw3-expanded .pw3-cpu-chart-container:not([hidden]) {
+        min-height: 220px;
+    }
+}
+/* ==========================================
+   PULSEWATCH v0.3 — DRAG RESIZE
+   ========================================== */
+
+.pw3-cpu-card {
+    position: relative;
+}
+
+.pw3-resize-handle {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    color: #9bacc0;
+    background: #1b2939;
+
+    border: 1px solid #35475a;
+    border-radius: 8px;
+
+    font-size: 19px;
+    cursor: ew-resize;
+    touch-action: none;
+    user-select: none;
+
+    z-index: 2;
+}
+
+.pw3-resize-handle:hover,
+.pw3-resize-handle.is-resizing {
+    color: #ff9e45;
+    border-color: #ff9e45;
+    background: #28313d;
+}
+
+/* Allow CPU to occupy 2, 3 or 4 grid columns */
+
+@media (min-width: 1101px) {
+
+    .overview-section .dashboard>.pw3-cpu-card[data-view="graph"] {
+        grid-column: span var(--pw3-cpu-span, 4);
+    }
+
+    .overview-section .dashboard>.pw3-cpu-card[data-view="gauge"],
+    .overview-section .dashboard>.pw3-cpu-card[data-view="compact"] {
+        grid-column: span var(--pw3-cpu-span, 2);
+    }
+}
+
+/* Hide resizing when expanded */
+
+.pw3-cpu-card.pw3-expanded .pw3-resize-handle {
+    display: none;
+}
+
+/* Smaller windows use the responsive layout */
+
+@media (max-width: 1100px) {
+
+    .pw3-resize-handle {
+        display: none;
+    }
+}

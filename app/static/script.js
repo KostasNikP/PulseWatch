@@ -68,11 +68,260 @@ const systemChart = createChart(
     100
 );
 
+/* ==========================================
+   NETWORK TRAFFIC CHART
+   ========================================== */
+
 const networkChart = createChart(
     "networkChart",
     ["Download Mbps", "Upload Mbps"],
     ["#38bdf8", "#f59e0b"]
 );
+
+
+
+/* ==========================================
+   PULSEWATCH v0.3 — LIVE CPU GRAPH
+   ========================================== */
+
+const overviewCpuChart = createChart(
+    "overviewCpuChart",
+    ["CPU Usage %"],
+    ["#ff9e45"],
+    100
+);
+
+// Orange area below the CPU line
+overviewCpuChart.data.datasets[0].fill = true;
+overviewCpuChart.data.datasets[0].backgroundColor =
+    "rgba(255, 158, 69, 0.12)";
+
+overviewCpuChart.data.datasets[0].borderWidth = 2.5;
+overviewCpuChart.data.datasets[0].tension = 0.35;
+overviewCpuChart.data.datasets[0].pointRadius = 0;
+
+overviewCpuChart.update("none");
+
+/* ==========================================
+   PULSEWATCH v0.3 — CPU DISPLAY MODES
+   ========================================== */
+
+const cpuCard = document.querySelector(".pw3-cpu-card");
+
+const cpuViewButtons = cpuCard.querySelectorAll(
+    ".pw3-view-switch button[data-view]"
+);
+
+const cpuGraphView = cpuCard.querySelector(
+    ".pw3-cpu-chart-container"
+);
+
+// Create the CPU Gauge view
+const cpuGaugeView = document.createElement("div");
+
+cpuGaugeView.className = "pw3-cpu-gauge-view";
+cpuGaugeView.hidden = true;
+
+cpuGaugeView.innerHTML = `
+    <div class="pw3-cpu-gauge-ring"
+         role="img"
+         aria-label="CPU usage">
+
+        <div class="pw3-cpu-gauge-center">
+            <strong id="pw3CpuGaugeValue">--%</strong>
+            <span>CPU Usage</span>
+        </div>
+
+    </div>
+
+    <p>Real-time processor utilization</p>
+`;
+
+cpuGraphView.after(cpuGaugeView);
+
+const cpuGaugeRing = cpuGaugeView.querySelector(
+    ".pw3-cpu-gauge-ring"
+);
+
+const cpuGaugeValue = document.getElementById(
+    "pw3CpuGaugeValue"
+);
+
+const CPU_VIEW_STORAGE_KEY = "pulsewatch_cpu_view_v3";
+
+
+// Update CPU Gauge using live measurements
+function updateCpuGauge(value) {
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) return;
+
+    const usage = Math.max(
+        0,
+        Math.min(100, numericValue)
+    );
+
+    const angle = usage * 3.6;
+
+    cpuGaugeRing.style.setProperty(
+        "--cpu-gauge-angle",
+        `${angle}deg`
+    );
+
+    cpuGaugeValue.textContent =
+        `${usage.toFixed(1)}%`;
+
+    cpuGaugeRing.setAttribute(
+        "aria-label",
+        `CPU usage ${usage.toFixed(1)} percent`
+    );
+}
+
+
+// Switch between Graph, Gauge and Compact
+function setCpuView(view) {
+
+    const validViews = [
+        "graph",
+        "gauge",
+        "compact"
+    ];
+
+    if (!validViews.includes(view)) {
+        view = "graph";
+    }
+
+    cpuCard.dataset.view = view;
+
+    cpuGraphView.hidden = view !== "graph";
+    cpuGaugeView.hidden = view !== "gauge";
+
+    cpuViewButtons.forEach(button => {
+
+        const isActive =
+            button.dataset.view === view;
+
+        button.classList.toggle(
+            "active",
+            isActive
+        );
+
+        button.setAttribute(
+            "aria-pressed",
+            String(isActive)
+        );
+    });
+
+    // Resize Chart.js when returning to Graph mode
+    if (view === "graph") {
+        requestAnimationFrame(() => {
+            overviewCpuChart.resize();
+        });
+    }
+
+    // Save user preference
+    try {
+        localStorage.setItem(
+            CPU_VIEW_STORAGE_KEY,
+            view
+        );
+    } catch (error) {
+        console.warn(
+            "Could not save CPU view:",
+            error
+        );
+    }
+}
+
+
+// Handle button clicks
+cpuViewButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+        setCpuView(button.dataset.view);
+    });
+
+});
+
+
+// Restore previously selected view
+let savedCpuView = "graph";
+
+try {
+    savedCpuView =
+        localStorage.getItem(CPU_VIEW_STORAGE_KEY)
+        || "graph";
+} catch (error) {
+    console.warn(
+        "Could not load CPU view:",
+        error
+    );
+}
+
+setCpuView(savedCpuView);
+
+/* ==========================================
+   PULSEWATCH v0.3 — CPU EXPAND / COLLAPSE
+   ========================================== */
+
+const cpuExpandButton =
+    document.getElementById("pw3CpuExpand");
+
+let cpuIsExpanded = false;
+
+
+function setCpuExpanded(expanded) {
+
+    cpuIsExpanded = expanded;
+
+    cpuCard.classList.toggle(
+        "pw3-expanded",
+        expanded
+    );
+
+    document.body.classList.toggle(
+        "pw3-overlay-open",
+        expanded
+    );
+
+    cpuExpandButton.textContent =
+        expanded ? "Collapse" : "Expand";
+
+    cpuExpandButton.setAttribute(
+        "aria-pressed",
+        String(expanded)
+    );
+
+    // Adjust the live chart to the new dimensions.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overviewCpuChart.resize();
+        });
+    });
+}
+
+
+// Expand or collapse when clicking the button.
+cpuExpandButton.addEventListener("click", () => {
+
+    setCpuExpanded(!cpuIsExpanded);
+
+});
+
+
+// Press Escape to close the expanded CPU panel.
+document.addEventListener("keydown", event => {
+
+    if (event.key === "Escape" && cpuIsExpanded) {
+        setCpuExpanded(false);
+        cpuExpandButton.focus();
+    }
+
+});
+
+
+
 
 const historySystemChart = createChart(
     "historySystemChart",
@@ -353,6 +602,7 @@ async function updateDashboard() {
         // Update metric cards
         document.getElementById("cpu").textContent =
             `${system.cpu_percent}%`;
+            updateCpuGauge(system.cpu_percent);
 
         document.getElementById("ram").textContent =
             `${system.ram_percent}%`;
@@ -385,6 +635,14 @@ async function updateDashboard() {
             system.cpu_percent,
             system.ram_percent
         ]);
+
+        // Update the new CPU overview graph
+        addChartData(
+            overviewCpuChart,
+            timeLabel,
+            [system.cpu_percent]
+        );
+
 
         addChartData(networkChart, timeLabel, [
             network.download_mbps,
@@ -526,3 +784,192 @@ setConnectionState("connecting");
 updateActiveNavigation();
 loadHistory();
 refreshDashboard();
+
+
+/* ==========================================
+   PULSEWATCH v0.3 — CPU WIDGET RESIZING
+   ========================================== */
+
+const cpuResizeHandle =
+    document.getElementById("pw3CpuResize");
+
+const cpuDashboardGrid =
+    cpuCard.closest(".dashboard");
+
+const CPU_SIZE_STORAGE_KEY =
+    "pulsewatch_cpu_width_v3";
+
+let cpuSavedSpan = null;
+let cpuResizeSession = null;
+
+
+// Restore saved width
+try {
+    const stored = Number.parseInt(
+        localStorage.getItem(CPU_SIZE_STORAGE_KEY),
+        10
+    );
+
+    if ([2, 3, 4].includes(stored)) {
+        cpuSavedSpan = stored;
+    }
+} catch (error) {
+    console.warn("CPU width storage unavailable:", error);
+}
+
+
+// Default width depends on display mode
+function getCpuSpan() {
+    if (cpuSavedSpan !== null) {
+        return cpuSavedSpan;
+    }
+
+    return cpuCard.dataset.view === "graph" ? 4 : 2;
+}
+
+
+// Apply selected width
+function setCpuSpan(span) {
+    const safeSpan = Math.max(
+        2,
+        Math.min(4, span)
+    );
+
+    cpuSavedSpan = safeSpan;
+
+    cpuCard.style.setProperty(
+        "--pw3-cpu-span",
+        safeSpan
+    );
+
+    try {
+        localStorage.setItem(
+            CPU_SIZE_STORAGE_KEY,
+            String(safeSpan)
+        );
+    } catch (error) {
+        console.warn("Could not save CPU width:", error);
+    }
+
+    // Keep Chart.js responsive
+    if (cpuCard.dataset.view === "graph") {
+        requestAnimationFrame(() => {
+            overviewCpuChart.resize();
+        });
+    }
+}
+
+
+// Apply stored width on startup
+if (cpuSavedSpan !== null) {
+    cpuCard.style.setProperty(
+        "--pw3-cpu-span",
+        cpuSavedSpan
+    );
+}
+
+
+// Start dragging
+cpuResizeHandle.addEventListener(
+    "pointerdown",
+    event => {
+
+        if (event.button !== 0) return;
+
+        if (
+            window.matchMedia(
+                "(max-width: 1100px)"
+            ).matches ||
+            cpuIsExpanded
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const styles = getComputedStyle(
+            cpuDashboardGrid
+        );
+
+        const gap =
+            parseFloat(styles.columnGap) || 18;
+
+        const columnStep =
+            (cpuDashboardGrid.clientWidth + gap) / 4;
+
+        cpuResizeSession = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startSpan: getCpuSpan(),
+            columnStep
+        };
+
+        cpuResizeHandle.setPointerCapture(
+            event.pointerId
+        );
+
+        cpuResizeHandle.classList.add(
+            "is-resizing"
+        );
+    }
+);
+
+
+// Resize while dragging
+cpuResizeHandle.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            !cpuResizeSession ||
+            event.pointerId !== cpuResizeSession.pointerId
+        ) {
+            return;
+        }
+
+        const distance =
+            event.clientX - cpuResizeSession.startX;
+
+        const columnChange = Math.round(
+            distance / cpuResizeSession.columnStep
+        );
+
+        const newSpan =
+            cpuResizeSession.startSpan + columnChange;
+
+        const safeSpan = Math.max(
+            2,
+            Math.min(4, newSpan)
+        );
+
+        if (safeSpan !== getCpuSpan()) {
+            setCpuSpan(safeSpan);
+        }
+    }
+);
+
+
+// Finish resizing
+function finishCpuResize() {
+    cpuResizeSession = null;
+
+    cpuResizeHandle.classList.remove(
+        "is-resizing"
+    );
+}
+
+cpuResizeHandle.addEventListener(
+    "pointerup",
+    finishCpuResize
+);
+
+cpuResizeHandle.addEventListener(
+    "pointercancel",
+    finishCpuResize
+);
+
+cpuResizeHandle.addEventListener(
+    "lostpointercapture",
+    finishCpuResize
+);
+

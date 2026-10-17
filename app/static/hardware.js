@@ -804,6 +804,51 @@ async function updateHardwareMonitor() {
 
         const age = Date.now() / 1000 - snapshot.timestamp;
 
+        /* ==========================================
+           PULSEWATCH v0.3 — CPU OVERVIEW METRICS
+           ========================================== */
+
+        const cpuTemperatureElement =
+            document.getElementById("overviewCpuTemp");
+
+        const cpuClockElement =
+            document.getElementById("overviewCpuClock");
+
+        if (cpuTemperatureElement && cpuClockElement) {
+
+            const isFresh =
+                Number.isFinite(age) &&
+                Math.abs(age) <= SENSOR_STALE_SECONDS;
+
+            const cpuDevice = snapshot.hardware.find(
+                device => device.category === "Cpu"
+            );
+
+            const highlights = isFresh && cpuDevice
+                ? getKeySensors(
+                    cpuDevice,
+                    getValidSensors(cpuDevice)
+                )
+                : [];
+
+            const temperature = highlights.find(
+                item => item.label === "Temperature"
+            )?.sensor;
+
+            const clock = highlights.find(
+                item => item.label === "Clock"
+            )?.sensor;
+
+            cpuTemperatureElement.textContent = temperature
+                ? `${temperature.value.toFixed(1)} °C`
+                : "-- °C";
+
+            cpuClockElement.textContent = clock
+                ? `${Math.round(clock.value).toLocaleString("en-US")} MHz`
+                : "-- MHz";
+        }
+
+
         if (
             !Number.isFinite(age) ||
             age > SENSOR_STALE_SECONDS ||

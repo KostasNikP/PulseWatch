@@ -8,6 +8,7 @@
     <title>PulseWatch | System Monitoring</title>
 
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/dashboard-v3.css">
 </head>
 
 <body>
@@ -82,9 +83,9 @@
             <header class="topbar">
 
                 <div class="topbar-heading">
-                    <span class="eyebrow">MONITORING DASHBOARD</span>
-                    <h1>System Overview</h1>
-                    <p>Real-time performance and network insights</p>
+                    <span class="eyebrow">PULSEWATCH / DASHBOARD</span>
+                    <h1>My PC</h1>
+                    <p>Customizable performance dashboard</p>
                 </div>
 
                 <div class="topbar-right">
@@ -115,18 +116,84 @@
 
                     <div class="dashboard">
 
-                        <article class="card metric-card">
-                            <div class="metric-header">
-                                <span>CPU Usage</span>
-                                <span class="metric-icon">CPU</span>
+                    <!-- CPU PERFORMANCE WIDGET -->
+                    <article class="card metric-card pw3-cpu-card">
+                    
+                        <div class="pw3-cpu-header">
+                    
+                            <div class="pw3-cpu-title">
+                                <span class="pw3-cpu-category">
+                                    PROCESSOR
+                                </span>
+                    
+                                <h3>CPU</h3>
+                                <p>Real-time processor performance</p>
+                            </div>
+                    
+                            <!-- CPU WIDGET CONTROLS -->
+                            <div class="pw3-cpu-actions">
+                            
+                                <!-- Display Mode -->
+                                <div class="pw3-view-switch" role="group" aria-label="CPU display mode">
+                            
+                                    <button type="button" data-view="gauge" aria-pressed="false">
+                                        Gauge
+                                    </button>
+                            
+                                    <button type="button" class="active" data-view="graph" aria-pressed="true">
+                                        Graph
+                                    </button>
+                            
+                                    <button type="button" data-view="compact" aria-pressed="false">
+                                        Compact
+                                    </button>
+                            
+                                </div>
+                            
+                                <!-- Expand / Collapse -->
+                                <button type="button" id="pw3CpuExpand" class="pw3-expand-button" aria-pressed="false">
+                                    Expand
+                                </button>
+                            
                             </div>
 
-                            <p id="cpu" class="metric-value">--%</p>
 
-                            <div class="metric-footer">
-                                Processor utilization
+                    
+                        </div>
+                    
+                        <div class="pw3-cpu-stats">
+                    
+                            <div class="pw3-cpu-stat">
+                                <span>Usage</span>
+                                <strong id="cpu">--%</strong>
                             </div>
+                    
+                            <div class="pw3-cpu-stat">
+                                <span>Temperature</span>
+                                <strong id="overviewCpuTemp">-- °C</strong>
+                            </div>
+                    
+                            <div class="pw3-cpu-stat">
+                                <span>Clock Speed</span>
+                                <strong id="overviewCpuClock">-- MHz</strong>
+                            </div>
+                    
+                        </div>
+                    
+                        <div class="pw3-cpu-chart-container">
+                            <canvas id="overviewCpuChart"></canvas>
+                        </div>
+                        
+                        <!-- CPU WIDGET RESIZE HANDLE -->
+                        <button type="button" id="pw3CpuResize" class="pw3-resize-handle" aria-label="Resize CPU widget"
+                            title="Resize CPU widget">
+                            <span aria-hidden="true">⤡</span>
+                        </button>
+                        
                         </article>
+
+
+
 
                         <article class="card metric-card">
                             <div class="metric-header">
