@@ -1256,3 +1256,97 @@ body.pw3-overlay-open {
         height: 220px;
     }
 }
+/* ==========================================
+   PULSEWATCH v0.3 — GPU EXPAND AND DRAG RESIZE
+   ========================================== */
+
+.pw3-gpu-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pw3-gpu-card .pw3-expand-button:hover {
+    border-color: var(--gpu-color);
+}
+
+.pw3-gpu-card .pw3-resize-handle:hover,
+.pw3-gpu-card .pw3-resize-handle.is-resizing {
+    color: var(--gpu-color);
+    border-color: var(--gpu-color);
+    background: #203447;
+}
+
+.pw3-gpu-card.pw3-expanded {
+    position: fixed;
+    inset: 4vh 4vw;
+    width: auto;
+    height: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    overflow: auto;
+    background: #101823;
+    border: 1px solid #32657d;
+    border-radius: 18px;
+    box-shadow:
+        0 0 0 100vmax rgba(0, 0, 0, 0.78),
+        0 25px 80px rgba(0, 0, 0, 0.5);
+    align-self: auto;
+}
+
+.pw3-gpu-card.pw3-expanded .pw3-gpu-chart-container:not([hidden]) {
+    flex: 1;
+    min-height: 300px;
+    height: auto;
+}
+
+.pw3-gpu-card.pw3-expanded[data-view="gauge"] .pw3-gpu-content {
+    flex: 1;
+    min-height: 320px;
+}
+
+.pw3-gpu-card.pw3-expanded .pw3-gpu-gauge {
+    max-width: 280px;
+}
+
+.pw3-gpu-card.pw3-expanded .pw3-resize-handle {
+    display: none;
+}
+
+/* Use the same 2-4 column resize range as the CPU card. */
+@media (min-width: 1101px) {
+    .overview-section .dashboard > .pw3-gpu-card[data-view] {
+        grid-column: span var(--pw3-gpu-span, 2);
+    }
+
+    .overview-section .dashboard > .pw3-gpu-card[data-view="graph"] {
+        grid-column: span var(--pw3-gpu-span, 4);
+    }
+}
+
+@media (max-width: 1400px) {
+    .pw3-gpu-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 1100px) {
+    .overview-section .dashboard > .pw3-gpu-card[data-view] {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 700px) {
+    .pw3-gpu-card.pw3-expanded {
+        inset: 10px;
+        padding: 18px;
+    }
+
+    .pw3-gpu-card.pw3-expanded .pw3-gpu-chart-container:not([hidden]) {
+        min-height: 220px;
+    }
+}

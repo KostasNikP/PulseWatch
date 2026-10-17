@@ -227,6 +227,143 @@ try {
 setGpuView(savedGpuView);
 
 
+/* ==========================================
+   PULSEWATCH v0.3 — GPU EXPAND / COLLAPSE
+   ========================================== */
+
+const gpuExpandButton = document.getElementById("pw3GpuExpand");
+let gpuIsExpanded = false;
+
+function setGpuExpanded(expanded) {
+    // Only one monitoring widget can be expanded at a time.
+    if (expanded && cpuIsExpanded) {
+        setCpuExpanded(false);
+    }
+
+    gpuIsExpanded = expanded;
+    gpuCard.classList.toggle("pw3-expanded", expanded);
+    document.body.classList.toggle("pw3-overlay-open", expanded);
+    gpuExpandButton.textContent = expanded ? "Collapse" : "Expand";
+    gpuExpandButton.setAttribute("aria-pressed", String(expanded));
+
+    // Chart.js needs to re-measure after the widget changes size.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => overviewGpuChart.resize());
+    });
+}
+
+gpuExpandButton.addEventListener("click", () => {
+    setGpuExpanded(!gpuIsExpanded);
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && gpuIsExpanded) {
+        setGpuExpanded(false);
+        gpuExpandButton.focus();
+    }
+});
+
+
+/* ==========================================
+   PULSEWATCH v0.3 — GPU DRAG RESIZE
+   ========================================== */
+
+const gpuResizeHandle = document.getElementById("pw3GpuResize");
+const gpuDashboardGrid = gpuCard.closest(".dashboard");
+const GPU_SIZE_STORAGE_KEY = "pulsewatch_gpu_width_v3";
+
+let gpuSavedSpan = null;
+let gpuResizeSession = null;
+
+try {
+    const stored = Number.parseInt(
+        localStorage.getItem(GPU_SIZE_STORAGE_KEY),
+        10
+    );
+
+    if ([2, 3, 4].includes(stored)) {
+        gpuSavedSpan = stored;
+        gpuCard.style.setProperty("--pw3-gpu-span", stored);
+    }
+} catch (error) {
+    console.warn("GPU width storage unavailable:", error);
+}
+
+function getGpuSpan() {
+    return gpuSavedSpan ?? (gpuCard.dataset.view === "graph" ? 4 : 2);
+}
+
+function setGpuSpan(span) {
+    const safeSpan = Math.max(2, Math.min(4, span));
+    gpuSavedSpan = safeSpan;
+    gpuCard.style.setProperty("--pw3-gpu-span", safeSpan);
+
+    try {
+        localStorage.setItem(GPU_SIZE_STORAGE_KEY, String(safeSpan));
+    } catch (error) {
+        console.warn("Could not save GPU width:", error);
+    }
+
+    if (gpuCard.dataset.view === "graph") {
+        requestAnimationFrame(() => overviewGpuChart.resize());
+    }
+}
+
+gpuResizeHandle.addEventListener("pointerdown", event => {
+    if (
+        event.button !== 0 ||
+        gpuIsExpanded ||
+        window.matchMedia("(max-width: 1100px)").matches
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const styles = getComputedStyle(gpuDashboardGrid);
+    const gap = Number.parseFloat(styles.columnGap) || 18;
+    const columnStep = (gpuDashboardGrid.clientWidth + gap) / 4;
+
+    gpuResizeSession = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startSpan: getGpuSpan(),
+        columnStep
+    };
+
+    gpuResizeHandle.setPointerCapture(event.pointerId);
+    gpuResizeHandle.classList.add("is-resizing");
+});
+
+gpuResizeHandle.addEventListener("pointermove", event => {
+    if (
+        !gpuResizeSession ||
+        event.pointerId !== gpuResizeSession.pointerId
+    ) {
+        return;
+    }
+
+    const distance = event.clientX - gpuResizeSession.startX;
+    const columnChange = Math.round(
+        distance / gpuResizeSession.columnStep
+    );
+    const newSpan = gpuResizeSession.startSpan + columnChange;
+    const safeSpan = Math.max(2, Math.min(4, newSpan));
+
+    if (safeSpan !== getGpuSpan()) {
+        setGpuSpan(safeSpan);
+    }
+});
+
+function finishGpuResize() {
+    gpuResizeSession = null;
+    gpuResizeHandle.classList.remove("is-resizing");
+}
+
+gpuResizeHandle.addEventListener("pointerup", finishGpuResize);
+gpuResizeHandle.addEventListener("pointercancel", finishGpuResize);
+gpuResizeHandle.addEventListener("lostpointercapture", finishGpuResize);
+
 
 /* ==========================================
    PULSEWATCH v0.3 — CPU DISPLAY MODES
@@ -398,6 +535,10 @@ let cpuIsExpanded = false;
 
 
 function setCpuExpanded(expanded) {
+
+    if (expanded && gpuIsExpanded) {
+        setGpuExpanded(false);
+    }
 
     cpuIsExpanded = expanded;
 
