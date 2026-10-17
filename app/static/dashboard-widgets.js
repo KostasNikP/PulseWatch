@@ -1,0 +1,368 @@
+(function () {
+"use strict";
+
+// One lightweight live sparkline per sensor, independent of Chart.js.
+const KEY = "pulsewatch_custom_sensor_widgets_v1";
+const MAX_HISTORY = 35, MIN_W = 185, MIN_H = 155, MAX_H = 640;
+const GROUPS = ["cpu", "gpu"];
+const units = {Temperature:"°C",Load:"%",Clock:"MHz",Fan:"RPM",
+    Power:"W",Voltage:"V",Current:"A",Control:"%",Level:"%",
+    Data:"GB",SmallData:"MB",Throughput:"B/s"};
+const regions = {
+    cpu:document.getElementById("pwCpuMiniWidgets"),
+    gpu:document.getElementById("pwGpuMiniWidgets")
+};
+const dialog = document.getElementById("pwCustomizeDialog");
+const list = document.getElementById("pwCustomizeList");
+const search = document.getElementById("pwCustomizeSearch");
+const catalog = {cpu:new Map(),gpu:new Map()};
+const cards = new Map();
+let state = {selected:{cpu:null,gpu:null},layout:{}};
+let draft = null, category = "cpu", draggingId = null, inventorySig = "";
+let lastSnapshot = null;
+const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
+const el = (tag,cls,text) => {
+    const node=document.createElement(tag);
+    if(cls) node.className=cls;
+    if(text!==undefined) node.textContent=text;
+    return node;
+};
+function save() {
+    try {localStorage.setItem(KEY,JSON.stringify(state));}
+    catch(e) {console.warn("Could not save widget settings:",e);}
+}
+try {
+    const stored=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(stored&&stored.selected) {
+        for(const g of GROUPS) {
+            if(Array.isArray(stored.selected[g]))
+                state.selected[g]=stored.selected[g].filter(x=>typeof x==="string");
+        }
+        if(stored.layout&&typeof stored.layout==="object")state.layout=stored.layout;
+    }
+} catch(e) {console.warn("Could not restore widgets:",e);}
+function allSensors(device) {
+    let result=[...(Array.isArray(device.sensors)?device.sensors:[])];
+    for(const child of device.children||[])result.push(...allSensors(child));
+    return result;
+}
+function valid(sensor) {
+    return sensor && Number.isFinite(sensor.value) &&
+        !/warning|critical|limit|threshold|resolution/i.test(sensor.name||"") &&
+        !(sensor.type==="Temperature"&&sensor.value===0);
+}
+function groupOf(device) {
+    if(device.category==="Cpu")return "cpu";
+    if((device.category||"").startsWith("Gpu"))return "gpu";
+    return null;
+}
+function defaults(group,items) {
+    const chosen=[];
+    function add(type,pattern) {
+        const item=items.find(v=>v.type===type&&!chosen.includes(v.id)&&
+            (!pattern||pattern.test(v.name)));
+        if(item)chosen.push(item.id);
+    }
+    if(group==="cpu") {
+        add("Load",/CPU Total|Total CPU/i);
+        add("Temperature",/Tctl\/Tdie|CPU Core|CPU Temperature/i);
+        add("Temperature",/Package|Core \(Average\)/i);
+        add("Clock",/Cores \(Average\)|Average/i);
+        if(!chosen.some(id=>items.find(i=>i.id===id)?.type==="Temperature"))
+            add("Temperature");
+    } else {
+        add("Load",/GPU Core|GPU Load/i);
+        add("Temperature",/GPU Core|GPU Temperature/i);
+        add("Clock",/GPU Core/i);
+        add("SmallData",/GPU Memory Used|Dedicated Memory Used/i);
+    }
+    return chosen;
+}
+function number(v){return v.toLocaleString("en-US",{maximumFractionDigits:1});}
+function reading(item){return number(item.value)+(units[item.type]?" "+units[item.type]:"");}
+function gaugeMax(item,history) {
+    if(["Load","Level","Control"].includes(item.type))return 100;
+    if(item.type==="Temperature")return 110;
+    if(item.type==="Clock")return item.group==="cpu"?6000:3000;
+    return Math.max(1,item.value,...history)*1.2;
+}
+function modeOf(card,mode) {
+    card.mode=mode;
+    card.button.textContent=mode==="graph"?"Graph":mode==="gauge"?"Gauge":"Value";
+    card.graph.hidden=mode!=="graph";
+    card.gauge.hidden=mode!=="gauge";
+    card.bigValue.hidden=mode!=="value";
+    card.stat.hidden=mode!=="graph";
+}
+function createCard(item) {
+    const node=el("article","pw-mini-widget");
+    node.draggable=true;
+    node.dataset.sensorId=item.id;
+    const header=el("div","pw-mini-header");
+    const grip=el("span","pw-mini-grip","⠿");
+    grip.title="Drag to reorder";
+    const title=el("div","pw-mini-title");
+    title.append(el("strong","",item.name),el("small","",item.type));
+    const buttons=el("div","pw-mini-buttons");
+    const button=el("button","pw-mini-mode","Graph");
+    button.type="button";
+    button.title="Switch Graph / Gauge / Value";
+    const hide=el("button","pw-mini-hide","×");
+    hide.type="button";
+    hide.title="Hide widget (re-enable in Customize Dashboard)";
+    buttons.append(button,hide);
+    header.append(grip,title,buttons);
+    const stat=el("div","pw-mini-stat");
+    const value=el("strong","pw-mini-value","--");
+    const extrema=el("small","pw-mini-extrema","Min -- · Max --");
+    stat.append(value,extrema);
+    const graph=el("div","pw-mini-graph");
+    const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("viewBox","0 0 300 100");
+    svg.setAttribute("preserveAspectRatio","none");
+    svg.setAttribute("role","img");
+    svg.setAttribute("aria-label",item.name+" live history");
+    const area=document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    area.setAttribute("class","pw-mini-area");
+    const line=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+    line.setAttribute("class","pw-mini-line");
+    svg.append(area,line);
+    graph.append(svg);
+    const gauge=el("div","pw-mini-gauge");
+    const ring=el("div","pw-mini-ring");
+    const gaugeValue=el("strong","pw-mini-gauge-value","--");
+    ring.append(gaugeValue);gauge.append(ring);
+    const bigValue=el("div","pw-mini-big-value","--");
+    const corner=el("button","pw-mini-corner","⤡");
+    corner.type="button";
+    corner.title="Drag to resize freely";
+    node.append(header,stat,graph,gauge,bigValue,corner);
+
+    const previous=state.layout[item.id]||{};
+    const parentWidth=regions[item.group].clientWidth||
+        Math.max(MIN_W,regions[item.group].parentElement.clientWidth-54);
+    node.style.width=clamp(Number(previous.width)||265,MIN_W,Math.max(MIN_W,parentWidth-2))+"px";
+    node.style.height=clamp(Number(previous.height)||198,MIN_H,MAX_H)+"px";
+
+    const card={item,node,stat,value,extrema,graph,gauge,gaugeValue,
+        bigValue,line,area,button,mode:"graph",samples:[],lastTime:null};
+    modeOf(card,["graph","gauge","value"].includes(previous.mode)?
+        previous.mode:"graph");
+    button.addEventListener("click",()=>{
+        const modes=["graph","gauge","value"];
+        modeOf(card,modes[(modes.indexOf(card.mode)+1)%modes.length]);
+        state.layout[item.id]={...(state.layout[item.id]||{}),mode:card.mode};
+        save();
+    });
+    hide.addEventListener("click",()=>{
+        state.selected[item.group]=state.selected[item.group].filter(id=>id!==item.id);
+        save();render(item.group);
+    });
+    // Drag the header to arrange panels horizontally or vertically.
+    grip.draggable=true;
+    node.addEventListener("dragstart",e=>{
+        if(resizing){e.preventDefault();return;}
+        draggingId=item.id;
+        node.classList.add("is-dragging");
+        if(e.dataTransfer) {
+            e.dataTransfer.effectAllowed="move";
+            e.dataTransfer.setData("text/plain",item.id);
+        }
+    });
+    node.addEventListener("dragend",()=>{draggingId=null;node.classList.remove("is-dragging");});
+    node.addEventListener("dragover",e=>{
+        if(draggingId&&draggingId!==item.id&&draggingId.startsWith(item.group+":"))
+            e.preventDefault();
+    });
+    node.addEventListener("drop",e=>{
+        if(!draggingId||draggingId===item.id||!draggingId.startsWith(item.group+":"))return;
+        e.preventDefault();
+        const order=state.selected[item.group],from=order.indexOf(draggingId),to=order.indexOf(item.id);
+        if(from<0||to<0)return;
+        order.splice(from,1);order.splice(to,0,draggingId);
+        save();render(item.group);
+    });
+    let resizing=null;
+    corner.addEventListener("pointerdown",e=>{
+        if(e.button!==0)return;
+        e.preventDefault();e.stopPropagation();
+        const box=node.getBoundingClientRect();
+        resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height};
+        node.draggable=false;
+        corner.setPointerCapture(e.pointerId);
+        corner.classList.add("is-resizing");
+    });
+    corner.addEventListener("pointermove",e=>{
+        if(!resizing||e.pointerId!==resizing.id)return;
+        const parentWidth=regions[item.group].clientWidth||
+            regions[item.group].parentElement.clientWidth-54;
+        node.style.width=Math.round(clamp(resizing.w+e.clientX-resizing.x,
+            MIN_W,Math.max(MIN_W,parentWidth-2)))+"px";
+        node.style.height=Math.round(clamp(resizing.h+e.clientY-resizing.y,
+            MIN_H,MAX_H))+"px";
+    });
+    function finish() {
+        if(!resizing)return;
+        resizing=null;node.draggable=true;
+        corner.classList.remove("is-resizing");
+        state.layout[item.id]={...(state.layout[item.id]||{}),
+            width:Math.round(node.getBoundingClientRect().width),
+            height:Math.round(node.getBoundingClientRect().height)};
+        save();
+    }
+    corner.addEventListener("pointerup",finish);
+    corner.addEventListener("pointercancel",finish);
+    corner.addEventListener("lostpointercapture",finish);
+    return card;
+}
+function render(group) {
+    const container=regions[group];
+    const order=state.selected[group]||[];
+    const shown=new Set(order.filter(id=>catalog[group].has(id)));
+    for(const [id,card] of cards) {
+        if(card.item.group===group&&!shown.has(id)) {
+            card.node.remove();cards.delete(id);
+        }
+    }
+    for(const id of order) {
+        const item=catalog[group].get(id);
+        if(!item)continue;
+        if(!cards.has(id))cards.set(id,createCard(item));
+        container.append(cards.get(id).node);
+    }
+    const old=container.querySelector(".pw-mini-empty");
+    if(!shown.size) {
+        if(!old)container.append(el("p","pw-mini-empty",
+            order.length?"Selected sensors unavailable.":"No widgets selected. Use Customize Dashboard."));
+    } else if(old)old.remove();
+}
+function updateCard(card,item,time) {
+    card.item=item;
+    if(card.lastTime!==time) {
+        card.samples.push(item.value);
+        if(card.samples.length>MAX_HISTORY)card.samples.shift();
+        card.lastTime=time;
+    }
+    card.value.textContent=reading(item);
+    card.bigValue.textContent=reading(item);
+    card.gaugeValue.textContent=reading(item);
+    const values=card.samples;
+    card.extrema.textContent="Min "+number(Math.min(...values))+
+        " · Max "+number(Math.max(...values));
+    const angle=clamp(item.value/gaugeMax(item,values)*360,0,360);
+    card.gauge.style.setProperty("--pw-mini-angle",angle+"deg");
+    const min=Math.min(...values),max=Math.max(...values);
+    const padding=Math.max((max-min)*0.15,0.01);
+    const points=values.map((v,i)=>{
+        const x=values.length===1?150:i*300/(values.length-1);
+        const y=90-(v-(min-padding))*80/(max-min+2*padding);
+        return x.toFixed(1)+","+y.toFixed(1);
+    }).join(" ");
+    card.line.setAttribute("points",points);
+    card.area.setAttribute("points","0,100 "+points+" 300,100");
+}
+function update(snapshot) {
+    if(!snapshot||!Array.isArray(snapshot.hardware))return;
+    lastSnapshot=snapshot;
+    if(!Number.isFinite(snapshot.timestamp)||
+        Math.abs(Date.now()/1000-snapshot.timestamp)>15)return;
+    const signatures=[];
+    for(const group of GROUPS)catalog[group].clear();
+    for(const device of snapshot.hardware) {
+        const group=groupOf(device);
+        if(!group)continue;
+        for(const sensor of allSensors(device)) {
+            if(!valid(sensor))continue;
+            const id=group+":"+(sensor.id||
+                [device.id||device.name,sensor.type,sensor.name].join("/"));
+            catalog[group].set(id,{id,group,name:sensor.name,
+                type:sensor.type,value:sensor.value,deviceName:device.name});
+        }
+    }
+    let changed=false;
+    for(const group of GROUPS) {
+        if(state.selected[group]===null&&catalog[group].size) {
+            state.selected[group]=defaults(group,[...catalog[group].values()]);
+            changed=true;
+        }
+        render(group);
+        for(const id of state.selected[group]||[]) {
+            const card=cards.get(id),item=catalog[group].get(id);
+            if(card&&item)updateCard(card,item,snapshot.timestamp);
+        }
+        signatures.push([...catalog[group].keys()].join("|"));
+    }
+    if(changed)save();
+    const signature=signatures.join("||");
+    if(dialog.open&&draft&&signature!==inventorySig)renderList();
+    inventorySig=signature;
+}
+function renderList() {
+    list.replaceChildren();
+    const term=search.value.trim().toLocaleLowerCase();
+    const items=[...catalog[category].values()]
+        .filter(s=>(s.name+" "+s.type+" "+s.deviceName).toLocaleLowerCase().includes(term))
+        .sort((a,b)=>a.type.localeCompare(b.type)||a.name.localeCompare(b.name));
+    if(!items.length) {
+        list.append(el("p","pw-customize-empty",
+            lastSnapshot?"No matching sensors available.":"Waiting for sensor readings..."));
+        return;
+    }
+    for(const item of items) {
+        const label=el("label","pw-customize-row");
+        const checkbox=document.createElement("input");
+        checkbox.type="checkbox";
+        checkbox.checked=draft[category].includes(item.id);
+        const details=el("span","pw-customize-details");
+        details.append(el("strong","",item.name),
+            el("small","",item.type+" · "+item.deviceName));
+        label.append(checkbox,details);
+        checkbox.addEventListener("change",()=>{
+            if(checkbox.checked&&!draft[category].includes(item.id))
+                draft[category].push(item.id);
+            if(!checkbox.checked)
+                draft[category]=draft[category].filter(id=>id!==item.id);
+        });
+        list.append(label);
+    }
+}
+function close() {draft=null;if(dialog.open)dialog.close();}
+function open() {
+    draft={cpu:[...(state.selected.cpu||[])],gpu:[...(state.selected.gpu||[])]};
+    category="cpu";search.value="";
+    selectGroup();renderList();dialog.showModal();
+}
+function selectGroup() {
+    for(const button of dialog.querySelectorAll("[data-pw-group]"))
+        button.classList.toggle("active",button.dataset.pwGroup===category);
+}
+document.getElementById("pwCustomizeDashboard").addEventListener("click",open);
+document.getElementById("pwCustomizeClose").addEventListener("click",close);
+document.getElementById("pwCustomizeCancel").addEventListener("click",close);
+dialog.addEventListener("close",()=>{draft=null;});
+for(const button of dialog.querySelectorAll("[data-pw-group]"))
+    button.addEventListener("click",()=>{
+        category=button.dataset.pwGroup;search.value="";
+        selectGroup();renderList();
+    });
+search.addEventListener("input",renderList);
+document.getElementById("pwCustomizeAll").addEventListener("click",()=>{
+    if(!draft)return;
+    const term=search.value.trim().toLocaleLowerCase();
+    for(const item of catalog[category].values())
+        if((item.name+" "+item.type+" "+item.deviceName).toLocaleLowerCase().includes(term)
+            &&!draft[category].includes(item.id))draft[category].push(item.id);
+    renderList();
+});
+document.getElementById("pwCustomizeApply").addEventListener("click",()=>{
+    if(!draft)return;
+    for(const group of GROUPS) {
+        state.selected[group]=draft[group];render(group);
+    }
+    save();
+    const selectedGroup=category;close();
+    if(selectedGroup==="cpu")setCpuView("widgets");
+    else setGpuView("widgets");
+});
+window.PulseWatchWidgets={update};
+})();

@@ -804,6 +804,13 @@ async function updateHardwareMonitor() {
 
         const age = Date.now() / 1000 - snapshot.timestamp;
 
+        // Optional sensor widgets should never interrupt core monitoring.
+        try {
+            window.PulseWatchWidgets?.update(snapshot);
+        } catch (widgetError) {
+            console.warn("Custom sensor widget error:", widgetError);
+        }
+
         /* ==========================================
            PULSEWATCH v0.3 — CPU OVERVIEW METRICS
            ========================================== */

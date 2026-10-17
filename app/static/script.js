@@ -151,7 +151,7 @@ const GPU_VIEW_STORAGE_KEY = "pulsewatch_gpu_view_v3";
 
 function setGpuView(view) {
 
-    const validViews = ["gauge", "graph", "compact"];
+    const validViews = ["gauge", "graph", "compact", "widgets"];
 
     if (!validViews.includes(view)) {
         view = "gauge";
@@ -169,6 +169,8 @@ function setGpuView(view) {
 
     // Show the live chart only in Graph mode
     gpuGraphView.hidden = view !== "graph";
+    gpuContent.hidden = view === "widgets";
+    document.getElementById("pwGpuMiniWidgets").hidden = view !== "widgets";
 
     // Update active buttons
     gpuViewButtons.forEach(button => {
@@ -448,7 +450,8 @@ function setCpuView(view) {
     const validViews = [
         "graph",
         "gauge",
-        "compact"
+        "compact",
+        "widgets"
     ];
 
     if (!validViews.includes(view)) {
@@ -459,6 +462,7 @@ function setCpuView(view) {
 
     cpuGraphView.hidden = view !== "graph";
     cpuGaugeView.hidden = view !== "gauge";
+    document.getElementById("pwCpuMiniWidgets").hidden = view !== "widgets";
 
     cpuViewButtons.forEach(button => {
 
