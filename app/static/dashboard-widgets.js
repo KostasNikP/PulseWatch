@@ -17,7 +17,7 @@ const list = document.getElementById("pwCustomizeList");
 const search = document.getElementById("pwCustomizeSearch");
 const catalog = {cpu:new Map(),gpu:new Map()};
 const cards = new Map();
-let state = {selected:{cpu:null,gpu:null},layout:{}};
+let state = {selected:{cpu:null,gpu:null},layout:{},free:{cpu:false,gpu:false}};
 let draft = null, category = "cpu", inventorySig = "";
 let lastSnapshot = null;
 const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
@@ -39,6 +39,9 @@ try {
                 state.selected[g]=stored.selected[g].filter(x=>typeof x==="string");
         }
         if(stored.layout&&typeof stored.layout==="object")state.layout=stored.layout;
+        for (const g of GROUPS) {
+            state.free[g] = stored.free?.[g] === true;
+        }
     }
 } catch(e) {console.warn("Could not restore widgets:",e);}
 function allSensors(device) {
@@ -99,10 +102,10 @@ function createCard(item) {
     node.dataset.sensorId=item.id;
     const header=el("div","pw-mini-header");
     const grip=el("span","pw-mini-grip","⠿");
-    grip.title="Drag to reorder";
+    grip.title="Drag to reorder or move freely";
     grip.tabIndex = 0;
     grip.setAttribute("role", "button");
-    grip.setAttribute("aria-label", "Move " + item.name + " widget. Use left or right arrow keys to reorder.");
+    grip.setAttribute("aria-label", "Move " + item.name + " widget. Drag to position, or use arrow keys.");
     const title=el("div","pw-mini-title");
     title.append(el("strong","",item.name),el("small","",item.type));
     const buttons=el("div","pw-mini-buttons");
@@ -178,7 +181,10 @@ function createCard(item) {
         grip.setPointerCapture(e.pointerId);
         moveSession = {
             pointerId: e.pointerId, startX: e.clientX, startY: e.clientY,
-            active: false, targetId: null, after: false, inside: false
+            active: false, targetId: null, after: false, inside: false,
+            free: isFree(item.group),
+            originX: Number.parseFloat(node.style.left) || 0,
+            originY: Number.parseFloat(node.style.top) || 0
         };
     });
     grip.addEventListener("pointermove", e => {
@@ -192,6 +198,21 @@ function createCard(item) {
         node.classList.add("is-dragging");
         grip.classList.add("is-moving");
         removeMovePreview();
+
+        if (drag.free) {
+            const area = regions[item.group];
+            const width = Math.max(MIN_W, area.clientWidth || area.parentElement.clientWidth - 54);
+            const cardWidth = Number.parseFloat(node.style.width) || MIN_W;
+            node.style.left = Math.round(clamp(
+                drag.originX + e.clientX - drag.startX,
+                0, Math.max(0, width - cardWidth)
+            )) + "px";
+            node.style.top = Math.round(Math.max(
+                0, drag.originY + e.clientY - drag.startY
+            )) + "px";
+            resizeFreeCanvas(item.group);
+            return;
+        }
 
         const hit = document.elementFromPoint(e.clientX, e.clientY);
         const region = hit && hit.closest(".pw-mini-region");
@@ -222,6 +243,21 @@ function createCard(item) {
         node.classList.remove("is-dragging");
         grip.classList.remove("is-moving");
         removeMovePreview();
+        if (drag.free) {
+            if (commit && drag.active) {
+                state.layout[item.id] = {
+                    ...(state.layout[item.id] || {}),
+                    x: Number.parseFloat(node.style.left) || 0,
+                    y: Number.parseFloat(node.style.top) || 0
+                };
+                save();
+            } else {
+                node.style.left = drag.originX + "px";
+                node.style.top = drag.originY + "px";
+            }
+            resizeFreeCanvas(item.group);
+            return;
+        }
         if (!commit || !drag.active || !drag.inside) return;
         moveWidget(item.group, item.id, drag.targetId, drag.after);
     }
@@ -238,6 +274,28 @@ function createCard(item) {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" &&
             e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
         e.preventDefault();
+        if (isFree(item.group)) {
+            const pos = state.layout[item.id] || {};
+            const distance = e.shiftKey ? 1 : 12;
+            const dx = e.key === "ArrowRight" ? distance :
+                e.key === "ArrowLeft" ? -distance : 0;
+            const dy = e.key === "ArrowDown" ? distance :
+                e.key === "ArrowUp" ? -distance : 0;
+            const area = regions[item.group];
+            const width = area.clientWidth || area.parentElement.clientWidth - 54;
+            const cardWidth = Number.parseFloat(node.style.width) || MIN_W;
+            const x = Math.round(clamp(
+                (Number(pos.x) || 0) + dx,
+                0, Math.max(0, width - cardWidth)
+            ));
+            const y = Math.round(Math.max(0, (Number(pos.y) || 0) + dy));
+            state.layout[item.id] = { ...pos, x, y };
+            node.style.left = x + "px";
+            node.style.top = y + "px";
+            resizeFreeCanvas(item.group);
+            save();
+            return;
+        }
         const order = state.selected[item.group] || [];
         const current = order.indexOf(item.id);
         const direction = ["ArrowRight", "ArrowDown"].includes(e.key) ? 1 : -1;
@@ -259,10 +317,13 @@ function createCard(item) {
         if(!resizing||e.pointerId!==resizing.id)return;
         const parentWidth=regions[item.group].clientWidth||
             regions[item.group].parentElement.clientWidth-54;
+        const usedX = isFree(item.group)
+            ? Number.parseFloat(node.style.left) || 0 : 0;
         node.style.width=Math.round(clamp(resizing.w+e.clientX-resizing.x,
-            MIN_W,Math.max(MIN_W,parentWidth-2)))+"px";
+            MIN_W,Math.max(MIN_W,parentWidth-usedX-2)))+"px";
         node.style.height=Math.round(clamp(resizing.h+e.clientY-resizing.y,
             MIN_H,MAX_H))+"px";
+        if (isFree(item.group)) resizeFreeCanvas(item.group);
     });
     function finish() {
         if(!resizing)return;
@@ -272,12 +333,135 @@ function createCard(item) {
             width:Math.round(node.getBoundingClientRect().width),
             height:Math.round(node.getBoundingClientRect().height)};
         save();
+        if (isFree(item.group)) resizeFreeCanvas(item.group);
     }
     corner.addEventListener("pointerup",finish);
     corner.addEventListener("pointercancel",finish);
     corner.addEventListener("lostpointercapture",finish);
     return card;
 }
+
+/* ==========================================
+   OPTIONAL FREE CANVAS — INDEPENDENT X/Y
+   ========================================== */
+
+function isFree(group) {
+    return state.free[group] === true;
+}
+
+function resizeFreeCanvas(group) {
+    if (!isFree(group)) return;
+    const region = regions[group];
+    let bottom = 240;
+    for (const card of cards.values()) {
+        if (card.item.group !== group || !card.node.isConnected) continue;
+        const node = card.node;
+        const y = Number.parseFloat(node.style.top) || 0;
+        const height = Number.parseFloat(node.style.height) || MIN_H;
+        bottom = Math.max(bottom, y + height + 18);
+    }
+    region.style.height = Math.ceil(bottom) + "px";
+}
+
+function syncFreeLayout(group) {
+    const region = regions[group];
+    const free = isFree(group);
+    region.classList.toggle("pw-mini-free", free);
+    for (const button of document.querySelectorAll(
+        '[data-pw-layout-group="' + group + '"] [data-pw-mode]'
+    )) {
+        const selected = button.dataset.pwMode === (free ? "free" : "auto");
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
+    }
+
+    if (!free) {
+        region.style.removeProperty("height");
+        for (const card of cards.values()) {
+            if (card.item.group !== group) continue;
+            card.node.style.removeProperty("left");
+            card.node.style.removeProperty("top");
+        }
+        return;
+    }
+
+    const regionWidth = Math.max(
+        MIN_W, region.clientWidth || region.parentElement.clientWidth - 54
+    );
+    const order = state.selected[group] || [];
+    let nextY = 0;
+    // Reserve existing positions before allocating newly enabled sensors.
+    for (const id of order) {
+        const item = state.layout[id] || {};
+        const card = cards.get(id);
+        if (!card || !Number.isFinite(item.x) || !Number.isFinite(item.y)) continue;
+        nextY = Math.max(nextY, item.y +
+            (Number.parseFloat(card.node.style.height) || MIN_H) + 12);
+    }
+
+    for (const id of order) {
+        const card = cards.get(id);
+        if (!card) continue;
+        const node = card.node;
+        const saved = state.layout[id] || {};
+        if (!Number.isFinite(saved.x) || !Number.isFinite(saved.y)) {
+            state.layout[id] = { ...saved, x: 0, y: nextY };
+            nextY += (Number.parseFloat(node.style.height) || MIN_H) + 12;
+        }
+        const pos = state.layout[id];
+        // Never override a live drag when a new sensor snapshot arrives.
+        if (node.classList.contains("is-dragging")) continue;
+        const cardWidth = Number.parseFloat(node.style.width) || MIN_W;
+        node.style.left = Math.round(clamp(pos.x, 0,
+            Math.max(0, regionWidth - cardWidth))) + "px";
+        node.style.top = Math.round(Math.max(0, pos.y)) + "px";
+    }
+    resizeFreeCanvas(group);
+}
+
+function setLayoutMode(group, mode) {
+    const free = mode === "free";
+    if (free === isFree(group)) return;
+    const region = regions[group];
+
+    if (free) {
+        // First-time Free Layout begins exactly where the widgets
+        // were arranged in Auto Layout. Old free positions are retained.
+        for (const id of state.selected[group] || []) {
+            const card = cards.get(id);
+            if (!card) continue;
+            const prior = state.layout[id] || {};
+            if (!Number.isFinite(prior.x) || !Number.isFinite(prior.y)) {
+                state.layout[id] = {
+                    ...prior, x: card.node.offsetLeft, y: card.node.offsetTop
+                };
+            }
+        }
+    }
+    state.free[group] = free;
+    syncFreeLayout(group);
+    save();
+}
+
+for (const group of GROUPS) {
+    const toolbar = document.querySelector(
+        '[data-pw-layout-group="' + group + '"]'
+    );
+    for (const button of toolbar.querySelectorAll("[data-pw-mode]")) {
+        button.addEventListener("click", () => {
+            setLayoutMode(group, button.dataset.pwMode);
+        });
+    }
+    syncFreeLayout(group);
+}
+
+// Keep saved positions in view when the dashboard changes width.
+window.addEventListener("resize", () => {
+    for (const group of GROUPS) {
+        if (isFree(group)) syncFreeLayout(group);
+    }
+});
+
 // Change only the order array. Width, height, selected sensors and graphs
 // are preserved because each widget DOM node remains mounted.
 function moveWidget(group, movingId, targetId, after) {
@@ -325,6 +509,7 @@ function render(group) {
         }
         position++;
     }
+    syncFreeLayout(group);
     const old=container.querySelector(".pw-mini-empty");
     if(!shown.size) {
         if(!old)container.append(el("p","pw-mini-empty",

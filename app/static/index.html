@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="/static/style.css?v=0.3.0-gpu-fix1">
     <link rel="stylesheet" href="/static/dashboard-v3.css?v=0.3.0-gpu-fix1">
-    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets2">
+    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets3">
 </head>
 
 <body>
@@ -189,6 +189,13 @@
                             <canvas id="overviewCpuChart"></canvas>
                         </div>
                         
+                        <div class="pw-mini-layout-controls" data-pw-layout-group="cpu"
+                             aria-label="CPU widget positioning">
+                            <span>Widget layout</span>
+                            <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                            <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                            <small>Free: drag any panel to a position you choose</small>
+                        </div>
                         <div id="pwCpuMiniWidgets" class="pw-mini-region" hidden
                              aria-label="Customizable CPU sensors"></div>
 
@@ -275,6 +282,13 @@
                                 <canvas id="overviewGpuChart"></canvas>
                             </div>
 
+                            <div class="pw-mini-layout-controls" data-pw-layout-group="gpu"
+                                 aria-label="GPU widget positioning">
+                                <span>Widget layout</span>
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                                <small>Free: drag any panel to a position you choose</small>
+                            </div>
                             <div id="pwGpuMiniWidgets" class="pw-mini-region" hidden
                                  aria-label="Customizable GPU sensors"></div>
 
@@ -656,7 +670,7 @@
 <script src="/static/notifications.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/settings.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/hardware.js?v=0.3.0-widgets1"></script>
-<script src="/static/dashboard-widgets.js?v=0.3.0-widgets2"></script>
+<script src="/static/dashboard-widgets.js?v=0.3.0-widgets3"></script>
 
 </body>
 
