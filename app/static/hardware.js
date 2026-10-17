@@ -912,13 +912,26 @@ async function updateHardwareMonitor() {
                 );
 
 
-                // Update GPU live graph
-                addChartData(
-                    overviewGpuChart,
-                    new Date(snapshot.timestamp * 1000)
-                        .toLocaleTimeString("el-GR"),
-                    [percent]
-                );
+                // A chart failure must not mark the hardware sensors OFFLINE.
+                // This also tolerates a WebView2 cache with an older script.js.
+                if (
+                    typeof addChartData === "function" &&
+                    typeof overviewGpuChart !== "undefined"
+                ) {
+                    try {
+                        addChartData(
+                            overviewGpuChart,
+                            new Date(snapshot.timestamp * 1000)
+                                .toLocaleTimeString("el-GR"),
+                            [percent]
+                        );
+                    } catch (chartError) {
+                        console.warn(
+                            "GPU live graph update failed:",
+                            chartError
+                        );
+                    }
+                }
 
 
                 gpuGaugeValue.textContent =

@@ -11,7 +11,7 @@ from app.launch_admin_helper import launch_admin_helper
 
 
 APP_TITLE = "PulseWatch - System Monitor"
-APP_URL = "http://127.0.0.1:8000/dashboard"
+APP_URL = "http://127.0.0.1:8000/dashboard?v=0.3.0-gpu-fix1"
 
 
 def run_desktop():

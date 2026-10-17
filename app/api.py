@@ -53,6 +53,21 @@ app.mount(
 )
 
 
+
+@app.middleware("http")
+async def prevent_dashboard_caching(request, call_next):
+    """Avoid stale JavaScript/CSS in persistent WebView2 sessions."""
+    response = await call_next(request)
+
+    if (
+        request.url.path == "/dashboard"
+        or request.url.path.startswith("/static/")
+    ):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+
+    return response
+
+
 @app.get("/")
 def home():
     return {"message": "PulseWatch API is running"}
