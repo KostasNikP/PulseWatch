@@ -4,7 +4,7 @@
 .pw-mini-region[hidden],.pw3-gpu-content[hidden] {display:none!important;}
 .pw3-cpu-card[data-view="widgets"] .pw3-cpu-stats,
 .pw3-gpu-card[data-view="widgets"] .pw3-gpu-content {display:none!important;}
-.pw-mini-region {display:flex;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;gap:12px;min-width:0;width:100%;padding-bottom:15px;}
+.pw-mini-region {position:relative;display:flex;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;gap:12px;min-width:0;width:100%;padding-bottom:15px;}
 .pw3-cpu-card[data-view="widgets"] .pw-mini-region {--mini-accent:#ff9e45;}
 .pw3-gpu-card[data-view="widgets"] .pw-mini-region {--mini-accent:#39cfff;}
 @media(min-width:1101px) {
