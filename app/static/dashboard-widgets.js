@@ -224,11 +224,18 @@ function render(group) {
             card.node.remove();cards.delete(id);
         }
     }
+    let position = 0;
     for(const id of order) {
         const item=catalog[group].get(id);
         if(!item)continue;
         if(!cards.has(id))cards.set(id,createCard(item));
-        container.append(cards.get(id).node);
+        const node=cards.get(id).node;
+        // Do not detach live DOM on every sensor refresh: that can cancel
+        // the pointer capture of a widget currently being resized.
+        if(container.children[position]!==node) {
+            container.insertBefore(node,container.children[position]||null);
+        }
+        position++;
     }
     const old=container.querySelector(".pw-mini-empty");
     if(!shown.size) {
