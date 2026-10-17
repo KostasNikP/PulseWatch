@@ -848,6 +848,153 @@ async function updateHardwareMonitor() {
                 : "-- MHz";
         }
 
+        /* ==========================================
+           PULSEWATCH v0.3 — GPU OVERVIEW METRICS
+           ========================================== */
+
+        const gpuNameElement =
+            document.getElementById("overviewGpuName");
+
+        const gpuGaugeValue =
+            document.getElementById("overviewGpuGaugeValue");
+
+        const gpuGauge =
+            document.querySelector(".pw3-gpu-gauge");
+
+        const gpuTempElement =
+            document.getElementById("overviewGpuTemp");
+
+        const gpuClockElement =
+            document.getElementById("overviewGpuClock");
+
+        const gpuVramElement =
+            document.getElementById("overviewGpuVram");
+
+
+        if (
+            gpuNameElement &&
+            gpuGaugeValue &&
+            gpuGauge &&
+            gpuTempElement &&
+            gpuClockElement &&
+            gpuVramElement
+        ) {
+            const gpuDevice = snapshot.hardware.find(
+                device => (device.category || "").startsWith("Gpu")
+            );
+
+            const freshGpuData =
+                Number.isFinite(age) &&
+                Math.abs(age) <= SENSOR_STALE_SECONDS;
+
+            const sensors = gpuDevice && freshGpuData
+                ? getValidSensors(gpuDevice)
+                : [];
+
+            const highlights = gpuDevice && freshGpuData
+                ? getKeySensors(gpuDevice, sensors)
+                : [];
+
+            // GPU model
+            gpuNameElement.textContent = gpuDevice
+                ? gpuDevice.name
+                : "GPU not detected";
+
+            // GPU usage
+            const usage = highlights.find(
+                item => item.label === "Usage"
+            )?.sensor;
+
+            if (usage) {
+                const percent = Math.max(
+                    0,
+                    Math.min(100, usage.value)
+                );
+
+
+                // Update GPU live graph
+                addChartData(
+                    overviewGpuChart,
+                    new Date(snapshot.timestamp * 1000)
+                        .toLocaleTimeString("el-GR"),
+                    [percent]
+                );
+
+
+                gpuGaugeValue.textContent =
+                    `${percent.toFixed(1)}%`;
+
+                gpuGauge.style.setProperty(
+                    "--pw3-gpu-angle",
+                    `${percent * 3.6}deg`
+                );
+            } else {
+                gpuGaugeValue.textContent = "--%";
+
+                gpuGauge.style.setProperty(
+                    "--pw3-gpu-angle",
+                    "0deg"
+                );
+            }
+
+            // GPU temperature
+            const temperature = highlights.find(
+                item => item.label === "Temperature"
+            )?.sensor;
+
+            gpuTempElement.textContent = temperature
+                ? `${temperature.value.toFixed(1)} °C`
+                : "-- °C";
+
+            // GPU core clock
+            const clock = highlights.find(
+                item => item.label === "Core Clock"
+            )?.sensor;
+
+            gpuClockElement.textContent = clock
+                ? `${Math.round(clock.value).toLocaleString("en-US")} MHz`
+                : "-- MHz";
+
+            // Dedicated GPU memory sensors
+            const memoryUsed = sensors.find(
+                sensor =>
+                    ["SmallData", "Data"].includes(sensor.type) &&
+                    /GPU Memory Used|Dedicated Memory Used|VRAM Used/i
+                        .test(sensor.name) &&
+                    !/Shared|System/i.test(sensor.name)
+            );
+
+            const memoryTotal = sensors.find(
+                sensor =>
+                    ["SmallData", "Data"].includes(sensor.type) &&
+                    /GPU Memory Total|Dedicated Memory Total|VRAM Total/i
+                        .test(sensor.name) &&
+                    !/Shared|System/i.test(sensor.name)
+            );
+
+            function memoryInGB(sensor) {
+                if (!sensor) return null;
+
+                return sensor.type === "SmallData"
+                    ? sensor.value / 1024
+                    : sensor.value;
+            }
+
+            const usedGB = memoryInGB(memoryUsed);
+            const totalGB = memoryInGB(memoryTotal);
+
+            if (usedGB !== null && totalGB !== null) {
+                gpuVramElement.textContent =
+                    `${usedGB.toFixed(2)} / ${totalGB.toFixed(1)} GB`;
+            } else if (usedGB !== null) {
+                gpuVramElement.textContent =
+                    `${usedGB.toFixed(2)} GB`;
+            } else {
+                gpuVramElement.textContent = "--";
+            }
+        }
+
+
 
         if (
             !Number.isFinite(age) ||

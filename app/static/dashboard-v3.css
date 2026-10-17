@@ -869,3 +869,390 @@ body.pw3-overlay-open {
         display: none;
     }
 }
+/* ==========================================
+   PULSEWATCH v0.3 — GPU PERFORMANCE WIDGET
+   ========================================== */
+
+.pw3-gpu-card {
+    grid-column: span 2;
+
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+
+    padding: 26px;
+
+    background: linear-gradient(145deg,
+            #121e2b 0%,
+            #0c131e 100%);
+
+    border: 1px solid #304355;
+    border-radius: 16px;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+/* Subtle blue glow */
+
+.pw3-gpu-card::before {
+    content: "";
+
+    position: absolute;
+    top: -100px;
+    right: -80px;
+
+    width: 300px;
+    height: 250px;
+
+    background: radial-gradient(circle,
+            rgba(57, 207, 255, 0.08),
+            transparent 70%);
+
+    pointer-events: none;
+}
+
+.pw3-gpu-card:hover {
+    border-color: #32657d;
+}
+
+/* ==========================================
+   GPU HEADER
+   ========================================== */
+
+.pw3-gpu-header {
+    position: relative;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.pw3-gpu-category {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--gpu-color);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+}
+
+.pw3-gpu-header h3 {
+    margin: 0;
+
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.pw3-gpu-header p {
+    margin: 5px 0 0;
+
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* GPU View Selector */
+
+.pw3-gpu-card .pw3-view-switch .active {
+    background: var(--gpu-color);
+    color: #07141d;
+
+    box-shadow:
+        0 0 16px rgba(57, 207, 255, 0.15);
+}
+
+/* Buttons will be enabled when views are implemented */
+
+.pw3-gpu-card .pw3-view-switch button:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.pw3-gpu-card .pw3-view-switch button.active:disabled {
+    opacity: 1;
+}
+
+/* ==========================================
+   GPU CONTENT
+   ========================================== */
+
+.pw3-gpu-content {
+    display: grid;
+
+    grid-template-columns:
+        minmax(140px, 0.9fr) minmax(0, 1fr);
+
+    align-items: center;
+    gap: 22px;
+}
+
+/* ==========================================
+   GPU CIRCULAR GAUGE
+   ========================================== */
+
+.pw3-gpu-gauge {
+    --pw3-gpu-angle: 0deg;
+
+    position: relative;
+
+    width: 100%;
+    max-width: 205px;
+    aspect-ratio: 1;
+
+    margin: 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: conic-gradient(from -90deg,
+            #39cfff 0deg,
+            #39cfff var(--pw3-gpu-angle),
+            #263746 var(--pw3-gpu-angle),
+            #263746 360deg);
+
+    box-shadow:
+        0 0 35px rgba(57, 207, 255, 0.09);
+}
+
+.pw3-gpu-gauge-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 79%;
+    height: 79%;
+
+    background: #0e1823;
+    border-radius: 50%;
+}
+
+.pw3-gpu-gauge-inner strong {
+    color: #ffffff;
+
+    font-size: clamp(23px, 2.4vw, 36px);
+    font-weight: 750;
+    letter-spacing: -1px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.pw3-gpu-gauge-inner span {
+    margin-top: 4px;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* ==========================================
+   GPU METRICS
+   ========================================== */
+
+.pw3-gpu-details {
+    display: flex;
+    flex-direction: column;
+
+    gap: 11px;
+    min-width: 0;
+}
+
+.pw3-gpu-detail {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding: 13px 15px;
+
+    background: rgba(8, 13, 20, 0.5);
+
+    border: 1px solid #253646;
+    border-radius: 10px;
+}
+
+.pw3-gpu-detail span {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.pw3-gpu-detail strong {
+    color: #eaf5ff;
+
+    font-size: 17px;
+    font-weight: 650;
+
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.pw3-gpu-detail:first-child strong {
+    color: var(--gpu-color);
+}
+
+/* ==========================================
+   FUTURE GRAPH VIEW
+   ========================================== */
+
+.pw3-gpu-chart-container {
+    position: relative;
+
+    width: 100%;
+    height: 230px;
+
+    margin-top: 20px;
+}
+
+.pw3-gpu-chart-container[hidden] {
+    display: none !important;
+}
+
+/* ==========================================
+   RESPONSIVE GPU CARD
+   ========================================== */
+
+@media (max-width: 1400px) {
+
+    .pw3-gpu-header {
+        flex-direction: column;
+    }
+
+    .pw3-gpu-content {
+        grid-template-columns:
+            minmax(115px, 0.8fr) minmax(0, 1fr);
+
+        gap: 14px;
+    }
+}
+
+@media (max-width: 1100px) {
+
+    .pw3-gpu-card {
+        grid-column: 1 / -1;
+    }
+
+    .pw3-gpu-header {
+        flex-direction: row;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .pw3-gpu-card {
+        grid-column: 1 / -1;
+        padding: 18px;
+    }
+
+    .pw3-gpu-header {
+        flex-direction: column;
+    }
+
+    .pw3-gpu-content {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .pw3-gpu-gauge {
+        max-width: 190px;
+    }
+
+    .pw3-gpu-details {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}
+/* ==========================================
+   PULSEWATCH v0.3 — GPU DISPLAY MODES
+   ========================================== */
+
+/* GAUGE VIEW */
+
+.pw3-gpu-card[data-view="gauge"] {
+    grid-column: span 2;
+}
+
+.pw3-gpu-card[data-view="gauge"] .pw3-gpu-content {
+    align-items: center;
+}
+
+/* GRAPH VIEW */
+
+.pw3-gpu-card[data-view="graph"] {
+    grid-column: 1 / -1;
+}
+
+.pw3-gpu-card[data-view="graph"] .pw3-gpu-content {
+    display: block;
+}
+
+.pw3-gpu-card[data-view="graph"] .pw3-gpu-details {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.pw3-gpu-card[data-view="graph"] .pw3-gpu-chart-container {
+    height: 290px;
+    margin-top: 22px;
+}
+
+/* COMPACT VIEW */
+
+.pw3-gpu-card[data-view="compact"] {
+    grid-column: span 2;
+    padding: 20px;
+    align-self: start;
+}
+
+.pw3-gpu-card[data-view="compact"] .pw3-gpu-header {
+    margin-bottom: 16px;
+}
+
+.pw3-gpu-card[data-view="compact"] .pw3-gpu-content {
+    display: block;
+}
+
+.pw3-gpu-card[data-view="compact"] .pw3-gpu-details {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.pw3-gpu-card[data-view="compact"] .pw3-gpu-detail {
+    padding: 12px;
+}
+
+.pw3-gpu-card[data-view="compact"] .pw3-gpu-detail strong {
+    font-size: 16px;
+}
+
+/* RESPONSIVE DISPLAY MODES */
+
+@media (max-width: 1100px) {
+
+    .pw3-gpu-card[data-view="gauge"],
+    .pw3-gpu-card[data-view="graph"],
+    .pw3-gpu-card[data-view="compact"] {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .pw3-gpu-card[data-view="graph"] .pw3-gpu-details,
+    .pw3-gpu-card[data-view="compact"] .pw3-gpu-details {
+        grid-template-columns: 1fr;
+    }
+
+    .pw3-gpu-card[data-view="graph"] .pw3-gpu-chart-container {
+        height: 220px;
+    }
+}

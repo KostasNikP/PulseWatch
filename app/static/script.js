@@ -103,6 +103,132 @@ overviewCpuChart.data.datasets[0].pointRadius = 0;
 overviewCpuChart.update("none");
 
 /* ==========================================
+   PULSEWATCH v0.3 — GPU LIVE GRAPH
+   ========================================== */
+
+const overviewGpuChart = createChart(
+    "overviewGpuChart",
+    ["GPU Usage %"],
+    ["#39cfff"],
+    100
+);
+
+// Blue area below the GPU line
+overviewGpuChart.data.datasets[0].fill = true;
+
+overviewGpuChart.data.datasets[0].backgroundColor =
+    "rgba(57, 207, 255, 0.12)";
+
+overviewGpuChart.data.datasets[0].borderWidth = 2.5;
+overviewGpuChart.data.datasets[0].tension = 0.35;
+overviewGpuChart.data.datasets[0].pointRadius = 0;
+
+overviewGpuChart.update("none");
+
+/* ==========================================
+   PULSEWATCH v0.3 — GPU DISPLAY MODES
+   ========================================== */
+
+const gpuCard = document.querySelector(".pw3-gpu-card");
+
+const gpuViewButtons = gpuCard.querySelectorAll(
+    ".pw3-view-switch button[data-gpu-view]"
+);
+
+const gpuGaugeView = gpuCard.querySelector(
+    ".pw3-gpu-gauge"
+);
+
+const gpuContent = gpuCard.querySelector(
+    ".pw3-gpu-content"
+);
+
+const gpuGraphView = gpuCard.querySelector(
+    ".pw3-gpu-chart-container"
+);
+
+const GPU_VIEW_STORAGE_KEY = "pulsewatch_gpu_view_v3";
+
+function setGpuView(view) {
+
+    const validViews = ["gauge", "graph", "compact"];
+
+    if (!validViews.includes(view)) {
+        view = "gauge";
+    }
+
+    gpuCard.dataset.view = view;
+
+    // Show the circular Gauge only in Gauge mode
+    gpuGaugeView.style.display =
+        view === "gauge" ? "" : "none";
+
+    // Keep hardware statistics visible
+    gpuContent.style.gridTemplateColumns =
+        view === "gauge" ? "" : "1fr";
+
+    // Show the live chart only in Graph mode
+    gpuGraphView.hidden = view !== "graph";
+
+    // Update active buttons
+    gpuViewButtons.forEach(button => {
+
+        const isActive =
+            button.dataset.gpuView === view;
+
+        button.classList.toggle("active", isActive);
+
+        button.setAttribute(
+            "aria-pressed",
+            String(isActive)
+        );
+    });
+
+    // Resize Chart.js after displaying the graph
+    if (view === "graph") {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                overviewGpuChart.resize();
+            });
+        });
+    }
+
+    // Save display preference
+    try {
+        localStorage.setItem(
+            GPU_VIEW_STORAGE_KEY,
+            view
+        );
+    } catch (error) {
+        console.warn("Could not save GPU view:", error);
+    }
+}
+
+// GPU buttons
+gpuViewButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+        setGpuView(button.dataset.gpuView);
+    });
+
+});
+
+// Restore GPU view after restarting PulseWatch
+let savedGpuView = "gauge";
+
+try {
+    savedGpuView =
+        localStorage.getItem(GPU_VIEW_STORAGE_KEY)
+        || "gauge";
+} catch (error) {
+    console.warn("Could not load GPU view:", error);
+}
+
+setGpuView(savedGpuView);
+
+
+
+/* ==========================================
    PULSEWATCH v0.3 — CPU DISPLAY MODES
    ========================================== */
 

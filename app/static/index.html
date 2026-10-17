@@ -192,6 +192,76 @@
                         
                         </article>
 
+                        <!-- GPU PERFORMANCE WIDGET -->
+                        <article class="card metric-card pw3-gpu-card" data-view="gauge">
+                        
+                            <div class="pw3-gpu-header">
+                                <div>
+                                    <span class="pw3-gpu-category">
+                                        GRAPHICS CARD
+                                    </span>
+                                    <h3>GPU</h3>
+                                    <p id="overviewGpuName">
+                                        Detecting graphics card...
+                                    </p>
+                                </div>
+                        
+                                <div class="pw3-gpu-actions">
+                                    <div class="pw3-view-switch" role="group" aria-label="GPU display mode">
+                        
+                                        <button type="button" data-gpu-view="gauge" class="active" aria-pressed="true">
+                                            Gauge
+                                        </button>
+                                        
+                                        <button type="button" data-gpu-view="graph" aria-pressed="false">
+                                            Graph
+                                        </button>
+                                        
+                                        <button type="button" data-gpu-view="compact" aria-pressed="false">
+                                            Compact
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="pw3-gpu-content">
+                        
+                                <div class="pw3-gpu-gauge">
+                                    <div class="pw3-gpu-gauge-inner">
+                                        <strong id="overviewGpuGaugeValue">--%</strong>
+                                        <span>GPU Usage</span>
+                                    </div>
+                                </div>
+                        
+                                <div class="pw3-gpu-details">
+                        
+                                    <div class="pw3-gpu-detail">
+                                        <span>Temperature</span>
+                                        <strong id="overviewGpuTemp">-- °C</strong>
+                                    </div>
+                        
+                                    <div class="pw3-gpu-detail">
+                                        <span>Core Clock</span>
+                                        <strong id="overviewGpuClock">-- MHz</strong>
+                                    </div>
+                        
+                                    <div class="pw3-gpu-detail">
+                                        <span>VRAM Usage</span>
+                                        <strong id="overviewGpuVram">--</strong>
+                                    </div>
+                        
+                                </div>
+                        
+                            </div>
+                        
+                            <div class="pw3-gpu-chart-container" hidden>
+                                <canvas id="overviewGpuChart"></canvas>
+                            </div>
+                        
+                        </article>
+
+
 
 
 
