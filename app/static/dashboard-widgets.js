@@ -4,20 +4,30 @@
 // One lightweight live sparkline per sensor, independent of Chart.js.
 const KEY = "pulsewatch_custom_sensor_widgets_v1";
 const MAX_HISTORY = 35, MIN_W = 185, MIN_H = 155, MAX_H = 640;
-const GROUPS = ["cpu", "gpu"];
+const GROUPS = ["cpu", "gpu", "ram", "storage", "network"];
 const units = {Temperature:"°C",Load:"%",Clock:"MHz",Fan:"RPM",
     Power:"W",Voltage:"V",Current:"A",Control:"%",Level:"%",
-    Data:"GB",SmallData:"MB",Throughput:"B/s"};
+    Data:"GB",SmallData:"MB",Throughput:"B/s",
+    SpeedMbps:"Mbps",DataGiB:"GiB",Count:""};
 const regions = {
     cpu:document.getElementById("pwCpuMiniWidgets"),
-    gpu:document.getElementById("pwGpuMiniWidgets")
+    gpu:document.getElementById("pwGpuMiniWidgets"),
+    ram:document.getElementById("pwRamMiniWidgets"),
+    storage:document.getElementById("pwStorageMiniWidgets"),
+    network:document.getElementById("pwNetworkMiniWidgets")
 };
 const dialog = document.getElementById("pwCustomizeDialog");
 const list = document.getElementById("pwCustomizeList");
 const search = document.getElementById("pwCustomizeSearch");
-const catalog = {cpu:new Map(),gpu:new Map()};
+const catalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
+const hardwareCatalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
+const metricsCatalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
 const cards = new Map();
-let state = {selected:{cpu:null,gpu:null},layout:{},free:{cpu:false,gpu:false}};
+let state = {
+    selected:Object.fromEntries(GROUPS.map(g => [g,null])),
+    layout:{},
+    free:Object.fromEntries(GROUPS.map(g => [g,false]))
+};
 let draft = null, category = "cpu", inventorySig = "";
 let lastSnapshot = null;
 const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
@@ -57,6 +67,9 @@ function valid(sensor) {
 function groupOf(device) {
     if(device.category==="Cpu")return "cpu";
     if((device.category||"").startsWith("Gpu"))return "gpu";
+    if(device.category==="Memory")return "ram";
+    if(device.category==="Storage")return "storage";
+    if(device.category==="Network")return "network";
     return null;
 }
 function defaults(group,items) {
@@ -73,11 +86,25 @@ function defaults(group,items) {
         add("Clock",/Cores \(Average\)|Average/i);
         if(!chosen.some(id=>items.find(i=>i.id===id)?.type==="Temperature"))
             add("Temperature");
-    } else {
+    } else if(group==="gpu") {
         add("Load",/GPU Core|GPU Load/i);
         add("Temperature",/GPU Core|GPU Temperature/i);
         add("Clock",/GPU Core/i);
         add("SmallData",/GPU Memory Used|Dedicated Memory Used/i);
+    } else {
+        // Populate new sections with reliable local psutil data.
+        const wanted = group==="ram"
+            ? ["used_pct","used_gib","available_gib","total_gib"]
+            : group==="storage"
+                ? ["used_pct","free_gib","used_gib","total_gib"]
+                : ["download_mbps","upload_mbps","received_gib","sent_gib"];
+        for(const key of wanted) {
+            const entry=items.find(s=>s.id===group+":metrics/"+key);
+            if(entry)chosen.push(entry.id);
+        }
+        // Offer live hardware temperature by default only if available.
+        if(group==="ram"||group==="storage")
+            add("Temperature",/Temperature|Composite|Memory/i);
     }
     return chosen;
 }
@@ -541,13 +568,44 @@ function updateCard(card,item,time) {
     card.line.setAttribute("points",points);
     card.area.setAttribute("points","0,100 "+points+" 300,100");
 }
-function update(snapshot) {
-    if(!snapshot||!Array.isArray(snapshot.hardware))return;
-    lastSnapshot=snapshot;
-    if(!Number.isFinite(snapshot.timestamp)||
-        Math.abs(Date.now()/1000-snapshot.timestamp)>15)return;
+// Preserve both streams of readings independently: the hardware
+// helper and psutil endpoints have different update schedules.
+function applyCatalog(timestamp) {
+    let modified=false;
     const signatures=[];
-    for(const group of GROUPS)catalog[group].clear();
+    for(const group of GROUPS) {
+        const merged=new Map([
+            ...metricsCatalog[group],
+            ...hardwareCatalog[group]
+        ]);
+        catalog[group]=merged;
+        // Avoid initializing RAM, Storage and Network with only
+        // intermittent hardware sensors before psutil data arrives.
+        const ready = group==="cpu"||group==="gpu" ||
+            metricsCatalog[group].size>0;
+        if(state.selected[group]===null && ready && merged.size) {
+            state.selected[group]=defaults(group,[...merged.values()]);
+            modified=true;
+        }
+        render(group);
+        for(const id of state.selected[group]||[]) {
+            const card=cards.get(id), item=merged.get(id);
+            if(card&&item)updateCard(card,item,item.sampleTime??timestamp);
+        }
+        signatures.push([...merged.keys()].join("|"));
+    }
+    if(modified)save();
+    const signature=signatures.join("||");
+    if(dialog.open&&draft&&inventorySig!==signature)renderList();
+    inventorySig=signature;
+}
+
+function update(snapshot) {
+    if(!snapshot||!Array.isArray(snapshot.hardware) ||
+        !Number.isFinite(snapshot.timestamp) ||
+        Math.abs(Date.now()/1000-snapshot.timestamp)>15)return;
+    lastSnapshot=snapshot;
+    for(const group of GROUPS)hardwareCatalog[group].clear();
     for(const device of snapshot.hardware) {
         const group=groupOf(device);
         if(!group)continue;
@@ -555,27 +613,61 @@ function update(snapshot) {
             if(!valid(sensor))continue;
             const id=group+":"+(sensor.id||
                 [device.id||device.name,sensor.type,sensor.name].join("/"));
-            catalog[group].set(id,{id,group,name:sensor.name,
-                type:sensor.type,value:sensor.value,deviceName:device.name});
+            hardwareCatalog[group].set(id,{
+                id,group,name:sensor.name,type:sensor.type,
+                value:sensor.value,deviceName:device.name,
+                sampleTime:snapshot.timestamp
+            });
         }
     }
-    let changed=false;
-    for(const group of GROUPS) {
-        if(state.selected[group]===null&&catalog[group].size) {
-            state.selected[group]=defaults(group,[...catalog[group].values()]);
-            changed=true;
-        }
-        render(group);
-        for(const id of state.selected[group]||[]) {
-            const card=cards.get(id),item=catalog[group].get(id);
-            if(card&&item)updateCard(card,item,snapshot.timestamp);
-        }
-        signatures.push([...catalog[group].keys()].join("|"));
+    applyCatalog(snapshot.timestamp);
+}
+
+// System metrics are available without the hardware helper, including
+// normal Windows PCs with no LibreHardwareMonitor sensor readings.
+function updateMetrics(metrics) {
+    if(!metrics||!metrics.system||!metrics.network ||
+        !Number.isFinite(metrics.timestamp) ||
+        Math.abs(Date.now()/1000-metrics.timestamp)>15)return;
+    lastSnapshot=metrics;
+    const system=metrics.system, network=metrics.network;
+    for(const group of ["ram","storage","network"])
+        metricsCatalog[group].clear();
+
+    function add(group,key,name,type,value) {
+        if(!Number.isFinite(value))return;
+        const id=group+":metrics/"+key;
+        metricsCatalog[group].set(id,{
+            id,group,name,type,value,deviceName:"System Metrics",
+            sampleTime:metrics.timestamp
+        });
     }
-    if(changed)save();
-    const signature=signatures.join("||");
-    if(dialog.open&&draft&&signature!==inventorySig)renderList();
-    inventorySig=signature;
+
+    add("ram","used_pct","Memory Usage","Load",system.ram_percent);
+    add("ram","total_gib","Physical RAM Total","DataGiB",system.ram_total_gib);
+    add("ram","available_gib","Memory Available","DataGiB",system.ram_available_gib);
+    add("ram","used_gib","Memory Used","DataGiB",
+        Number.isFinite(system.ram_total_gib)&&Number.isFinite(system.ram_available_gib)
+            ? Math.max(0,system.ram_total_gib-system.ram_available_gib):NaN);
+
+    add("storage","used_pct","C: Disk Usage","Load",system.disk_percent);
+    add("storage","total_gib","C: Capacity","DataGiB",system.disk_total_gib);
+    add("storage","free_gib","C: Free Space","DataGiB",system.disk_free_gib);
+    add("storage","used_gib","C: Used Space","DataGiB",
+        Number.isFinite(system.disk_total_gib)&&Number.isFinite(system.disk_free_gib)
+            ? Math.max(0,system.disk_total_gib-system.disk_free_gib):NaN);
+
+    add("network","download_mbps","Download Speed","SpeedMbps",network.download_mbps);
+    add("network","upload_mbps","Upload Speed","SpeedMbps",network.upload_mbps);
+    const gib=1024**3;
+    add("network","received_gib","Total Received","DataGiB",
+        Number.isFinite(network.bytes_received)?network.bytes_received/gib:NaN);
+    add("network","sent_gib","Total Sent","DataGiB",
+        Number.isFinite(network.bytes_sent)?network.bytes_sent/gib:NaN);
+    add("network","packets_received","Packets Received","Count",network.packets_received);
+    add("network","packets_sent","Packets Sent","Count",network.packets_sent);
+
+    applyCatalog(metrics.timestamp);
 }
 function renderList() {
     list.replaceChildren();
@@ -608,7 +700,9 @@ function renderList() {
 }
 function close() {draft=null;if(dialog.open)dialog.close();}
 function open() {
-    draft={cpu:[...(state.selected.cpu||[])],gpu:[...(state.selected.gpu||[])]};
+    draft=Object.fromEntries(
+        GROUPS.map(group=>[group,[...(state.selected[group]||[])]])
+    );
     category="cpu";search.value="";
     selectGroup();renderList();dialog.showModal();
 }
@@ -642,7 +736,7 @@ document.getElementById("pwCustomizeApply").addEventListener("click",()=>{
     save();
     const selectedGroup=category;close();
     if(selectedGroup==="cpu")setCpuView("widgets");
-    else setGpuView("widgets");
+    if(selectedGroup==="gpu")setGpuView("widgets");
 });
-window.PulseWatchWidgets={update};
+window.PulseWatchWidgets={update,updateMetrics};
 })();
