@@ -870,6 +870,16 @@ async function updateDashboard() {
 
         setConnectionState(isFresh ? "online" : "stale");
 
+        // RAM, Storage and Network widgets use live psutil measurements.
+        // Keep the regular dashboard and connection state independent.
+        if (isFresh) {
+            try {
+                window.PulseWatchWidgets?.updateMetrics(metrics);
+            } catch (error) {
+                console.warn("System widget refresh failed:", error);
+            }
+        }
+
         // Update metric cards
         document.getElementById("cpu").textContent =
             `${system.cpu_percent}%`;
