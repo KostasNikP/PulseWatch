@@ -151,3 +151,39 @@
     position: relative;
     padding: 18px;
 }
+
+/* Shared customizable RAM / Storage / Network cards */
+.pw-extra-card {
+    --pw-extra-accent:#34d399;
+    --mini-accent:var(--pw-extra-accent);
+    position:relative;
+    grid-column:span 2;
+    min-width:0;
+    padding:24px;
+    background:linear-gradient(145deg,#141b25,#0c111a);
+    border:1px solid #35404c;
+    border-radius:16px;
+    overflow:hidden;
+}
+.pw-ram-card {--pw-extra-accent:#34d399;}
+.pw-storage-card {--pw-extra-accent:#f3b84c;}
+.pw-network-card {--pw-extra-accent:#b69bff;grid-column:1/-1;}
+.pw-extra-card:hover {border-color:var(--pw-extra-accent);}
+.pw-extra-header {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.pw-extra-eyebrow {display:block;color:var(--pw-extra-accent);font-size:10px;font-weight:750;letter-spacing:1.7px;margin-bottom:6px;}
+.pw-extra-heading h3 {color:#fff;font-size:22px;font-weight:700;margin:0;}
+.pw-extra-heading p {color:#9bacc0;font-size:12px;margin:6px 0 0;}
+.pw-extra-stats {display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.pw-extra-stats span {display:flex;flex-direction:column;gap:6px;padding:11px 15px;color:#a5b6c7;background:rgba(8,13,20,.5);border:1px solid #2b3949;border-radius:9px;font-size:12px;}
+.pw-extra-stats strong {color:var(--pw-extra-accent);font-size:23px;font-variant-numeric:tabular-nums;}
+.pw-extra-card .pw-mini-layout-controls {display:flex;margin:0 0 16px;}
+.pw-extra-card .pw-mini-layout-controls button.active {background:var(--pw-extra-accent);border-color:var(--pw-extra-accent);color:#07141e;}
+.pw-extra-card .pw-mini-widget {--mini-accent:var(--pw-extra-accent);}
+.pw-extra-card .pw-mini-region {margin-bottom:12px;}
+@media(max-width:1100px) {
+    .overview-section .dashboard>.pw-extra-card {grid-column:1/-1;}
+}
+@media(max-width:700px) {
+    .pw-extra-card {padding:18px;}
+    .pw-extra-stats strong {font-size:19px;}
+}

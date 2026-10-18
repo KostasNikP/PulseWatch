@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="/static/style.css?v=0.3.0-gpu-fix1">
     <link rel="stylesheet" href="/static/dashboard-v3.css?v=0.3.0-gpu-fix1">
-    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets3">
+    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets4">
 </head>
 
 <body>
@@ -305,62 +305,69 @@
 
 
 
-                        <article class="card metric-card">
-                            <div class="metric-header">
-                                <span>Memory Usage</span>
-                                <span class="metric-icon">RAM</span>
-                            </div>
 
-                            <p id="ram" class="metric-value">--%</p>
-
-                            <div class="metric-footer">
-                                Physical memory utilization
+                        <!-- CUSTOMIZABLE RAM MONITORING -->
+                        <article class="card metric-card pw-extra-card pw-ram-card">
+                            <header class="pw-extra-header">
+                                <div class="pw-extra-heading">
+                                    <span class="pw-extra-eyebrow">SYSTEM MEMORY</span>
+                                    <h3>RAM</h3>
+                                    <p>Physical memory and hardware sensor readings</p>
+                                </div>
+                            </header>
+                            <div class="pw-extra-stats"><span>Memory usage <strong id="ram">--%</strong></span></div>
+                            <div class="pw-mini-layout-controls" data-pw-layout-group="ram"
+                                 aria-label="RAM widget positioning">
+                                <span>Widget layout</span>
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                                <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
+                            <div id="pwRamMiniWidgets"
+                                 class="pw-mini-region" aria-label="RAM customizable sensors"></div>
                         </article>
 
-                        <article class="card metric-card">
-                            <div class="metric-header">
-                                <span>Disk Usage</span>
-                                <span class="metric-icon">SSD</span>
+                        <!-- CUSTOMIZABLE STORAGE MONITORING -->
+                        <article class="card metric-card pw-extra-card pw-storage-card">
+                            <header class="pw-extra-header">
+                                <div class="pw-extra-heading">
+                                    <span class="pw-extra-eyebrow">DRIVES & SSD</span>
+                                    <h3>STORAGE</h3>
+                                    <p>Drive capacity, temperature and hardware health</p>
+                                </div>
+                            </header>
+                            <div class="pw-extra-stats"><span>C: used capacity <strong id="disk">--%</strong></span></div>
+                            <div class="pw-mini-layout-controls" data-pw-layout-group="storage"
+                                 aria-label="STORAGE widget positioning">
+                                <span>Widget layout</span>
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                                <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
-
-                            <p id="disk" class="metric-value">--%</p>
-
-                            <div class="metric-footer">
-                                Primary drive capacity
-                            </div>
+                            <div id="pwStorageMiniWidgets"
+                                 class="pw-mini-region" aria-label="STORAGE customizable sensors"></div>
                         </article>
 
-                        <article class="card metric-card">
-                            <div class="metric-header">
-                                <span>Download</span>
-                                <span class="metric-icon">↓</span>
+                        <!-- CUSTOMIZABLE NETWORK MONITORING -->
+                        <article class="card metric-card pw-extra-card pw-network-card">
+                            <header class="pw-extra-header">
+                                <div class="pw-extra-heading">
+                                    <span class="pw-extra-eyebrow">TRAFFIC & ADAPTERS</span>
+                                    <h3>NETWORK</h3>
+                                    <p>Network speeds, data totals and adapter sensors</p>
+                                </div>
+                            </header>
+                            <div class="pw-extra-stats"><span>↓ Download <strong id="download">-- Mbps</strong></span><span>↑ Upload <strong id="upload">-- Mbps</strong></span></div>
+                            <div class="pw-mini-layout-controls" data-pw-layout-group="network"
+                                 aria-label="NETWORK widget positioning">
+                                <span>Widget layout</span>
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                                <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
-
-                            <p id="download" class="metric-value">
-                                -- Mbps
-                            </p>
-
-                            <div class="metric-footer">
-                                Incoming network traffic
-                            </div>
+                            <div id="pwNetworkMiniWidgets"
+                                 class="pw-mini-region" aria-label="NETWORK customizable sensors"></div>
                         </article>
-
-                        <article class="card metric-card">
-                            <div class="metric-header">
-                                <span>Upload</span>
-                                <span class="metric-icon">↑</span>
-                            </div>
-
-                            <p id="upload" class="metric-value">
-                                -- Mbps
-                            </p>
-
-                            <div class="metric-footer">
-                                Outgoing network traffic
-                            </div>
-                        </article>
-
                     </div>
 
                 </section>
@@ -640,6 +647,9 @@
             <nav class="pw-customize-nav" aria-label="Hardware">
                 <button type="button" data-pw-group="cpu" class="active">CPU</button>
                 <button type="button" data-pw-group="gpu">GPU</button>
+                <button type="button" data-pw-group="ram">RAM</button>
+                <button type="button" data-pw-group="storage">Storage</button>
+                <button type="button" data-pw-group="network">Network</button>
             </nav>
             <div class="pw-customize-main">
                 <input id="pwCustomizeSearch" type="search"
@@ -670,7 +680,7 @@
 <script src="/static/notifications.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/settings.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/hardware.js?v=0.3.0-widgets1"></script>
-<script src="/static/dashboard-widgets.js?v=0.3.0-widgets3"></script>
+<script src="/static/dashboard-widgets.js?v=0.3.0-widgets4"></script>
 
 </body>
 
