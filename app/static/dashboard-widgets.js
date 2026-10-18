@@ -707,24 +707,53 @@ function renderList() {
 const resetDialog = document.getElementById("pwLayoutResetDialog");
 const resetTitle = document.getElementById("pwLayoutResetTitle");
 const resetMessage = document.getElementById("pwLayoutResetMessage");
+const resetImpact = document.getElementById("pwResetImpact");
+const resetConfirm = document.getElementById("pwLayoutResetConfirm");
 let pendingResetGroup = null;
+let pendingResetKind = "layout";
 const groupLabels = {
     cpu: "CPU", gpu: "GPU", ram: "RAM",
     storage: "Storage", network: "Network"
 };
 
-function requestLayoutReset(group) {
+function requestReset(group, kind) {
     if (group !== "all" && !GROUPS.includes(group)) return;
+    if (kind !== "layout" && kind !== "defaults") return;
     pendingResetGroup = group;
+    pendingResetKind = kind;
     const all = group === "all";
-    resetTitle.textContent = all ? "Reset all widget layouts?" :
-        "Reset " + groupLabels[group] + " layout?";
-    resetMessage.textContent = all
-        ? "Restore default widget sizes, Graph display, automatic positioning and order for all five sections."
-        : "Restore default sizes, Graph display, automatic positioning and order for " + groupLabels[group] + ".";
-    // Avoid stacking two native modal dialogs, especially in WebView2.
+    const target = all ? "all five sections" : groupLabels[group];
+
+    if (kind === "defaults") {
+        resetTitle.textContent = all
+            ? "Restore all default widgets?"
+            : "Restore " + groupLabels[group] + " defaults?";
+        resetMessage.textContent = "Restore the original sensor widgets, sizes, " +
+            "Graph display and Auto layout for " + target + ". " +
+            "Custom sensor selections and hidden widgets in " + target + " will be replaced.";
+        resetImpact.textContent = "Custom widgets and layouts in the selected " +
+            (all ? "sections" : "section") + " will be reset.";
+        resetConfirm.textContent = "Reset to defaults";
+    } else {
+        resetTitle.textContent = all
+            ? "Reset all widget layouts?"
+            : "Reset " + groupLabels[group] + " layout?";
+        resetMessage.textContent = all
+            ? "Restore widget sizes, Graph display, automatic positioning and order for all five sections."
+            : "Restore sizes, Graph display, automatic positioning and order for " + groupLabels[group] + ".";
+        resetImpact.textContent = "Your selected and hidden sensors will not change.";
+        resetConfirm.textContent = "Reset layout";
+    }
+
+    // WebView2 permits only one modal dialog at a time.
     if (dialog.open) close();
     resetDialog.showModal();
+}
+function requestLayoutReset(group) {
+    requestReset(group, "layout");
+}
+function requestDefaultsReset(group) {
+    requestReset(group, "defaults");
 }
 
 function resetGroupLayout(group) {
@@ -764,8 +793,19 @@ function resetGroupLayout(group) {
     render(group);
 }
 
+function resetGroupToDefaults(group) {
+    // Restore the factory sensor subset, not every hardware sensor.
+    // A null selection is an intentional deferred reset when no live
+    // readings are available; applyCatalog() initializes it on return.
+    resetGroupLayout(group);
+    const items = [...catalog[group].values()];
+    state.selected[group] = items.length ? defaults(group, items) : null;
+    render(group);
+}
+
 function closeResetDialog() {
     pendingResetGroup = null;
+    pendingResetKind = "layout";
     if (resetDialog.open) resetDialog.close();
 }
 
@@ -776,18 +816,32 @@ document.querySelectorAll("[data-pw-reset]").forEach(button => {
 });
 document.getElementById("pwCustomizeResetAll")
     .addEventListener("click", () => requestLayoutReset("all"));
+
+document.querySelectorAll("[data-pw-defaults]").forEach(button => {
+    button.addEventListener("click", () => {
+        requestDefaultsReset(button.dataset.pwDefaults);
+    });
+});
+document.getElementById("pwCustomizeDefaultsAll")
+    .addEventListener("click", () => requestDefaultsReset("all"));
+
 document.getElementById("pwLayoutResetCancel")
     .addEventListener("click", closeResetDialog);
-document.getElementById("pwLayoutResetConfirm")
-    .addEventListener("click", () => {
-        if (pendingResetGroup === null) return;
-        const groupsToReset = pendingResetGroup === "all"
-            ? GROUPS : [pendingResetGroup];
-        for (const group of groupsToReset) resetGroupLayout(group);
-        save();
-        closeResetDialog();
-    });
-resetDialog.addEventListener("close", () => { pendingResetGroup = null; });
+resetConfirm.addEventListener("click", () => {
+    if (pendingResetGroup === null) return;
+    const groupsToReset = pendingResetGroup === "all"
+        ? GROUPS : [pendingResetGroup];
+    for (const group of groupsToReset) {
+        if (pendingResetKind === "defaults") resetGroupToDefaults(group);
+        else resetGroupLayout(group);
+    }
+    save();
+    closeResetDialog();
+});
+resetDialog.addEventListener("close", () => {
+    pendingResetGroup = null;
+    pendingResetKind = "layout";
+});
 
 function close() {draft=null;if(dialog.open)dialog.close();}
 function open() {

@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="/static/style.css?v=0.3.0-gpu-fix1">
     <link rel="stylesheet" href="/static/dashboard-v3.css?v=0.3.0-gpu-fix1">
-    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets5">
+    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets6">
 </head>
 
 <body>
@@ -196,6 +196,8 @@
                             <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                             <button type="button" class="pw-mini-reset" data-pw-reset="cpu"
                                     title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="cpu"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
                             <small>Free: drag any panel to a position you choose</small>
                         </div>
                         <div id="pwCpuMiniWidgets" class="pw-mini-region" hidden
@@ -291,6 +293,8 @@
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                             <button type="button" class="pw-mini-reset" data-pw-reset="gpu"
                                     title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="gpu"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
                                 <small>Free: drag any panel to a position you choose</small>
                             </div>
                             <div id="pwGpuMiniWidgets" class="pw-mini-region" hidden
@@ -327,6 +331,8 @@
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="ram"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="ram"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
                                 <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
                             <div id="pwRamMiniWidgets"
@@ -350,6 +356,8 @@
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="storage"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="storage"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
                                 <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
                             <div id="pwStorageMiniWidgets"
@@ -373,6 +381,8 @@
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="network"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="network"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
                                 <small>Drag individual sensor widgets to customize their positions</small>
                             </div>
                             <div id="pwNetworkMiniWidgets"
@@ -672,6 +682,8 @@
                 <button id="pwCustomizeAll" type="button">Select all matching</button>
                 <button id="pwCustomizeResetAll" class="pw-mini-reset" type="button"
                         title="Reset all five widget layouts">Reset all layouts</button>
+                <button id="pwCustomizeDefaultsAll" class="pw-mini-defaults" type="button"
+                        title="Restore the original sensor widgets and layouts in all five sections">Reset all to defaults</button>
             </div>
             <div>
                 <button id="pwCustomizeCancel" type="button">Cancel</button>
@@ -685,7 +697,7 @@
             aria-labelledby="pwLayoutResetTitle" aria-describedby="pwLayoutResetMessage">
         <h2 id="pwLayoutResetTitle">Reset widget layout?</h2>
         <p id="pwLayoutResetMessage"></p>
-        <p class="pw-reset-preserved">Your selected and hidden sensors will not change.</p>
+        <p id="pwResetImpact" class="pw-reset-preserved">Your selected and hidden sensors will not change.</p>
         <div class="pw-reset-actions">
             <button type="button" id="pwLayoutResetCancel">Cancel</button>
             <button type="button" id="pwLayoutResetConfirm">Reset layout</button>
@@ -706,7 +718,7 @@
 <script src="/static/notifications.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/settings.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/hardware.js?v=0.3.0-widgets1"></script>
-<script src="/static/dashboard-widgets.js?v=0.3.0-widgets5"></script>
+<script src="/static/dashboard-widgets.js?v=0.3.0-widgets6"></script>
 
 </body>
 

@@ -317,3 +317,24 @@
         width: 100%;
     }
 }
+
+
+/* Explicit factory reset: distinct from the layout-only action. */
+.pw-mini-layout-controls .pw-mini-defaults,
+.pw-customize-footer .pw-mini-defaults {
+    color: #d0e7f6;
+    background: rgba(34,73,100,.2);
+    border-color: #416079;
+}
+.pw-mini-layout-controls .pw-mini-defaults:hover,
+.pw-customize-footer .pw-mini-defaults:hover {
+    background: #21445c;
+    border-color: #5c9ac0;
+    color: #f1faff;
+}
+.pw-customize-footer-left button {
+    white-space: nowrap;
+}
+.pw-reset-dialog .pw-reset-preserved {
+    color: #82c8af;
+}
