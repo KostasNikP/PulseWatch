@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="/static/style.css?v=0.3.0-gpu-fix1">
     <link rel="stylesheet" href="/static/dashboard-v3.css?v=0.3.0-gpu-fix1">
-    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets6">
+    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets7">
 </head>
 
 <body>
@@ -155,10 +155,7 @@
                             
                                 </div>
                             
-                                <!-- Expand / Collapse -->
-                                <button type="button" id="pw3CpuExpand" class="pw3-expand-button" aria-pressed="false">
-                                    Expand
-                                </button>
+                                
                             
                             </div>
 
@@ -204,7 +201,7 @@
                              aria-label="Customizable CPU sensors"></div>
 
                         <!-- CPU WIDGET RESIZE HANDLE -->
-                        <button type="button" id="pw3CpuResize" class="pw3-resize-handle" aria-label="Resize CPU widget"
+                        <button type="button" id="pw3CpuResize" data-pw-parent-resize="cpu" class="pw3-resize-handle" aria-label="Resize CPU widget"
                             title="Resize CPU widget">
                             <span aria-hidden="true">⤡</span>
                         </button>
@@ -244,11 +241,7 @@
                                         </button>
 
                                     </div>
-                                    <button type="button" id="pw3GpuExpand"
-                                            class="pw3-expand-button"
-                                            aria-pressed="false">
-                                        Expand
-                                    </button>
+                                    
                                 </div>
                             </div>
                         
@@ -300,7 +293,7 @@
                             <div id="pwGpuMiniWidgets" class="pw-mini-region" hidden
                                  aria-label="Customizable GPU sensors"></div>
 
-                            <button type="button" id="pw3GpuResize"
+                            <button type="button" id="pw3GpuResize" data-pw-parent-resize="gpu"
                                     class="pw3-resize-handle"
                                     aria-label="Resize GPU widget"
                                     title="Drag to resize GPU widget">
@@ -322,8 +315,15 @@
                                     <h3>RAM</h3>
                                     <p>Physical memory and hardware sensor readings</p>
                                 </div>
+                                <div class="pw3-view-switch pw-extra-view-switch" role="group" aria-label="RAM display mode">
+                                    <button type="button" data-pw-extra-view="gauge" aria-pressed="false">Gauge</button>
+                                    <button type="button" data-pw-extra-view="graph" aria-pressed="false">Graph</button>
+                                    <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
+                                    <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
+                                </div>
                             </header>
                             <div class="pw-extra-stats"><span>Memory usage <strong id="ram">--%</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
                             <div class="pw-mini-layout-controls" data-pw-layout-group="ram"
                                  aria-label="RAM widget positioning">
                                 <span>Widget layout</span>
@@ -337,6 +337,7 @@
                             </div>
                             <div id="pwRamMiniWidgets"
                                  class="pw-mini-region" aria-label="RAM customizable sensors"></div>
+                        <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="ram" aria-label="Resize RAM card" title="Drag to freely resize RAM card"><span aria-hidden="true">⤡</span></button>
                         </article>
 
                         <!-- CUSTOMIZABLE STORAGE MONITORING -->
@@ -347,8 +348,15 @@
                                     <h3>STORAGE</h3>
                                     <p>Drive capacity, temperature and hardware health</p>
                                 </div>
+                                <div class="pw3-view-switch pw-extra-view-switch" role="group" aria-label="STORAGE display mode">
+                                    <button type="button" data-pw-extra-view="gauge" aria-pressed="false">Gauge</button>
+                                    <button type="button" data-pw-extra-view="graph" aria-pressed="false">Graph</button>
+                                    <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
+                                    <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
+                                </div>
                             </header>
                             <div class="pw-extra-stats"><span>C: used capacity <strong id="disk">--%</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
                             <div class="pw-mini-layout-controls" data-pw-layout-group="storage"
                                  aria-label="STORAGE widget positioning">
                                 <span>Widget layout</span>
@@ -362,6 +370,7 @@
                             </div>
                             <div id="pwStorageMiniWidgets"
                                  class="pw-mini-region" aria-label="STORAGE customizable sensors"></div>
+                        <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="storage" aria-label="Resize STORAGE card" title="Drag to freely resize STORAGE card"><span aria-hidden="true">⤡</span></button>
                         </article>
 
                         <!-- CUSTOMIZABLE NETWORK MONITORING -->
@@ -372,8 +381,15 @@
                                     <h3>NETWORK</h3>
                                     <p>Network speeds, data totals and adapter sensors</p>
                                 </div>
+                                <div class="pw3-view-switch pw-extra-view-switch" role="group" aria-label="NETWORK display mode">
+                                    <button type="button" data-pw-extra-view="gauge" aria-pressed="false">Gauge</button>
+                                    <button type="button" data-pw-extra-view="graph" aria-pressed="false">Graph</button>
+                                    <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
+                                    <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
+                                </div>
                             </header>
                             <div class="pw-extra-stats"><span>↓ Download <strong id="download">-- Mbps</strong></span><span>↑ Upload <strong id="upload">-- Mbps</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
                             <div class="pw-mini-layout-controls" data-pw-layout-group="network"
                                  aria-label="NETWORK widget positioning">
                                 <span>Widget layout</span>
@@ -387,6 +403,34 @@
                             </div>
                             <div id="pwNetworkMiniWidgets"
                                  class="pw-mini-region" aria-label="NETWORK customizable sensors"></div>
+                        <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="network" aria-label="Resize NETWORK card" title="Drag to freely resize NETWORK card"><span aria-hidden="true">⤡</span></button>
+                        </article>
+                        <!-- MOTHERBOARD SENSORS -->
+                        <article class="card metric-card pw-extra-card pw-motherboard-card" data-view="widgets">
+                            <header class="pw-extra-header">
+                                <div class="pw-extra-heading">
+                                    <span class="pw-extra-eyebrow">BOARD & CONTROLLERS</span>
+                                    <h3>MOTHERBOARD</h3>
+                                    <p>Temperatures, fans, voltages and supported motherboard sensors</p>
+                                </div>
+                                <div class="pw3-view-switch pw-extra-view-switch" role="group" aria-label="Motherboard display mode">
+                                    <button type="button" data-pw-extra-view="gauge" aria-pressed="false">Gauge</button>
+                                    <button type="button" data-pw-extra-view="graph" aria-pressed="false">Graph</button>
+                                    <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
+                                    <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
+                                </div>
+                            </header>
+                            <div class="pw-extra-primary" hidden></div>
+                            <div class="pw-mini-layout-controls" data-pw-layout-group="motherboard" aria-label="Motherboard widget positioning">
+                                <span>Widget layout</span>
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                                <button type="button" class="pw-mini-reset" data-pw-reset="motherboard">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="motherboard">Reset to defaults</button>
+                                <small>Drag individual sensor widgets to customize their positions</small>
+                            </div>
+                            <div id="pwMotherboardMiniWidgets" class="pw-mini-region" aria-label="Motherboard customizable sensors"></div>
+                            <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="motherboard" aria-label="Resize Motherboard card" title="Drag to freely resize Motherboard card"><span aria-hidden="true">⤡</span></button>
                         </article>
                     </div>
 
@@ -670,6 +714,7 @@
                 <button type="button" data-pw-group="ram">RAM</button>
                 <button type="button" data-pw-group="storage">Storage</button>
                 <button type="button" data-pw-group="network">Network</button>
+                <button type="button" data-pw-group="motherboard">Motherboard</button>
             </nav>
             <div class="pw-customize-main">
                 <input id="pwCustomizeSearch" type="search"
@@ -681,9 +726,9 @@
             <div class="pw-customize-footer-left">
                 <button id="pwCustomizeAll" type="button">Select all matching</button>
                 <button id="pwCustomizeResetAll" class="pw-mini-reset" type="button"
-                        title="Reset all five widget layouts">Reset all layouts</button>
+                        title="Reset all six widget layouts">Reset all layouts</button>
                 <button id="pwCustomizeDefaultsAll" class="pw-mini-defaults" type="button"
-                        title="Restore the original sensor widgets and layouts in all five sections">Reset all to defaults</button>
+                        title="Restore the original sensor widgets and layouts in all six sections">Reset all to defaults</button>
             </div>
             <div>
                 <button id="pwCustomizeCancel" type="button">Cancel</button>
@@ -718,7 +763,9 @@
 <script src="/static/notifications.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/settings.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/hardware.js?v=0.3.0-widgets1"></script>
-<script src="/static/dashboard-widgets.js?v=0.3.0-widgets6"></script>
+<script src="/static/dashboard-widgets.js?v=0.3.0-widgets7"></script>
+<script src="/static/dashboard-extra-modes.js?v=0.3.0-extra1"></script>
+<script src="/static/dashboard-parent-layout.js?v=0.3.0-parent1"></script>
 
 </body>
 
