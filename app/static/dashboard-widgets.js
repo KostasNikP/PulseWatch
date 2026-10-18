@@ -4,7 +4,7 @@
 // One lightweight live sparkline per sensor, independent of Chart.js.
 const KEY = "pulsewatch_custom_sensor_widgets_v1";
 const MAX_HISTORY = 35, MIN_W = 185, MIN_H = 155, MAX_H = 640;
-const GROUPS = ["cpu", "gpu", "ram", "storage", "network"];
+const GROUPS = ["cpu", "gpu", "ram", "storage", "network", "motherboard"];
 const units = {Temperature:"°C",Load:"%",Clock:"MHz",Fan:"RPM",
     Power:"W",Voltage:"V",Current:"A",Control:"%",Level:"%",
     Data:"GB",SmallData:"MB",Throughput:"B/s",
@@ -14,7 +14,8 @@ const regions = {
     gpu:document.getElementById("pwGpuMiniWidgets"),
     ram:document.getElementById("pwRamMiniWidgets"),
     storage:document.getElementById("pwStorageMiniWidgets"),
-    network:document.getElementById("pwNetworkMiniWidgets")
+    network:document.getElementById("pwNetworkMiniWidgets"),
+    motherboard:document.getElementById("pwMotherboardMiniWidgets")
 };
 const dialog = document.getElementById("pwCustomizeDialog");
 const list = document.getElementById("pwCustomizeList");
@@ -70,6 +71,7 @@ function groupOf(device) {
     if(device.category==="Memory")return "ram";
     if(device.category==="Storage")return "storage";
     if(device.category==="Network")return "network";
+    if(device.category==="Motherboard")return "motherboard";
     return null;
 }
 function defaults(group,items) {
@@ -91,6 +93,12 @@ function defaults(group,items) {
         add("Temperature",/GPU Core|GPU Temperature/i);
         add("Clock",/GPU Core/i);
         add("SmallData",/GPU Memory Used|Dedicated Memory Used/i);
+    } else if (group==="motherboard") {
+        add("Temperature",/System|Motherboard|Chipset|CPU/i);
+        add("Fan",/CPU|System|Fan/i);
+        add("Voltage",/Vcore|CPU|12V/i);
+        add("Temperature");
+        if(chosen.length===0) add();
     } else {
         // Populate new sections with reliable local psutil data.
         const wanted = group==="ram"
@@ -581,7 +589,7 @@ function applyCatalog(timestamp) {
         catalog[group]=merged;
         // Avoid initializing RAM, Storage and Network with only
         // intermittent hardware sensors before psutil data arrives.
-        const ready = group==="cpu"||group==="gpu" ||
+        const ready = group==="cpu"||group==="gpu"||group==="motherboard" ||
             metricsCatalog[group].size>0;
         if(state.selected[group]===null && ready && merged.size) {
             state.selected[group]=defaults(group,[...merged.values()]);
@@ -595,6 +603,10 @@ function applyCatalog(timestamp) {
         signatures.push([...merged.keys()].join("|"));
     }
     if(modified)save();
+    // The overview display modes draw their own compact primary
+    // readout, chart or gauge using the same live sensor catalog.
+    try { window.PulseWatchExtraModes?.update(catalog); }
+    catch(error) { console.warn("Overview display update failed:",error); }
     const signature=signatures.join("||");
     if(dialog.open&&draft&&inventorySig!==signature)renderList();
     inventorySig=signature;
@@ -713,7 +725,7 @@ let pendingResetGroup = null;
 let pendingResetKind = "layout";
 const groupLabels = {
     cpu: "CPU", gpu: "GPU", ram: "RAM",
-    storage: "Storage", network: "Network"
+    storage: "Storage", network: "Network", motherboard:"Motherboard"
 };
 
 function requestReset(group, kind) {
@@ -739,7 +751,7 @@ function requestReset(group, kind) {
             ? "Reset all widget layouts?"
             : "Reset " + groupLabels[group] + " layout?";
         resetMessage.textContent = all
-            ? "Restore widget sizes, Graph display, automatic positioning and order for all five sections."
+            ? "Restore widget sizes, Graph display, automatic positioning and order for all six sections."
             : "Restore sizes, Graph display, automatic positioning and order for " + groupLabels[group] + ".";
         resetImpact.textContent = "Your selected and hidden sensors will not change.";
         resetConfirm.textContent = "Reset layout";
