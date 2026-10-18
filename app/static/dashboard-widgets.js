@@ -694,10 +694,101 @@ function renderList() {
                 draft[category].push(item.id);
             if(!checkbox.checked)
                 draft[category]=draft[category].filter(id=>id!==item.id);
+            updateCustomizeCounts();
         });
         list.append(label);
     }
 }
+
+/* ==========================================
+   RESET LAYOUT WITHOUT TOUCHING SENSOR SELECTIONS
+   ========================================== */
+
+const resetDialog = document.getElementById("pwLayoutResetDialog");
+const resetTitle = document.getElementById("pwLayoutResetTitle");
+const resetMessage = document.getElementById("pwLayoutResetMessage");
+let pendingResetGroup = null;
+const groupLabels = {
+    cpu: "CPU", gpu: "GPU", ram: "RAM",
+    storage: "Storage", network: "Network"
+};
+
+function requestLayoutReset(group) {
+    if (group !== "all" && !GROUPS.includes(group)) return;
+    pendingResetGroup = group;
+    const all = group === "all";
+    resetTitle.textContent = all ? "Reset all widget layouts?" :
+        "Reset " + groupLabels[group] + " layout?";
+    resetMessage.textContent = all
+        ? "Restore default widget sizes, Graph display, automatic positioning and order for all five sections."
+        : "Restore default sizes, Graph display, automatic positioning and order for " + groupLabels[group] + ".";
+    // Avoid stacking two native modal dialogs, especially in WebView2.
+    if (dialog.open) close();
+    resetDialog.showModal();
+}
+
+function resetGroupLayout(group) {
+    const selected = state.selected[group];
+    if (Array.isArray(selected)) {
+        const originalOrder = [...catalog[group].keys()];
+        const preferredOrder = defaults(group, [...catalog[group].values()]);
+        function rank(id) {
+            const preferred = preferredOrder.indexOf(id);
+            if (preferred >= 0) return preferred;
+            const original = originalOrder.indexOf(id);
+            return preferredOrder.length +
+                (original < 0 ? originalOrder.length : original);
+        }
+        // Keep the exact set of visible sensors, even if they are
+        // currently offline; only restore their display order.
+        state.selected[group] = [...selected].sort((a,b) => rank(a) - rank(b));
+    }
+
+    for (const id of Object.keys(state.layout)) {
+        if (id.startsWith(group + ":")) delete state.layout[id];
+    }
+    state.free[group] = false;
+
+    for (const card of cards.values()) {
+        if (card.item.group !== group) continue;
+        const node = card.node;
+        const availableWidth = regions[group].clientWidth ||
+            Math.max(MIN_W, regions[group].parentElement.clientWidth - 54);
+        node.style.width = Math.min(265, Math.max(MIN_W, availableWidth - 2)) + "px";
+        node.style.height = "198px";
+        node.style.removeProperty("left");
+        node.style.removeProperty("top");
+        modeOf(card, "graph");
+    }
+
+    render(group);
+}
+
+function closeResetDialog() {
+    pendingResetGroup = null;
+    if (resetDialog.open) resetDialog.close();
+}
+
+document.querySelectorAll("[data-pw-reset]").forEach(button => {
+    button.addEventListener("click", () => {
+        requestLayoutReset(button.dataset.pwReset);
+    });
+});
+document.getElementById("pwCustomizeResetAll")
+    .addEventListener("click", () => requestLayoutReset("all"));
+document.getElementById("pwLayoutResetCancel")
+    .addEventListener("click", closeResetDialog);
+document.getElementById("pwLayoutResetConfirm")
+    .addEventListener("click", () => {
+        if (pendingResetGroup === null) return;
+        const groupsToReset = pendingResetGroup === "all"
+            ? GROUPS : [pendingResetGroup];
+        for (const group of groupsToReset) resetGroupLayout(group);
+        save();
+        closeResetDialog();
+    });
+resetDialog.addEventListener("close", () => { pendingResetGroup = null; });
+
 function close() {draft=null;if(dialog.open)dialog.close();}
 function open() {
     draft=Object.fromEntries(
@@ -706,9 +797,20 @@ function open() {
     category="cpu";search.value="";
     selectGroup();renderList();dialog.showModal();
 }
+function updateCustomizeCounts() {
+    if (!draft) return;
+    for (const button of dialog.querySelectorAll("[data-pw-group]")) {
+        const group = button.dataset.pwGroup;
+        button.textContent = groupLabels[group] + " (" + draft[group].length + ")";
+    }
+}
 function selectGroup() {
-    for(const button of dialog.querySelectorAll("[data-pw-group]"))
-        button.classList.toggle("active",button.dataset.pwGroup===category);
+    for(const button of dialog.querySelectorAll("[data-pw-group]")) {
+        const active = button.dataset.pwGroup === category;
+        button.classList.toggle("active",active);
+        button.setAttribute("aria-pressed",String(active));
+    }
+    updateCustomizeCounts();
 }
 document.getElementById("pwCustomizeDashboard").addEventListener("click",open);
 document.getElementById("pwCustomizeClose").addEventListener("click",close);
@@ -727,6 +829,7 @@ document.getElementById("pwCustomizeAll").addEventListener("click",()=>{
         if((item.name+" "+item.type+" "+item.deviceName).toLocaleLowerCase().includes(term)
             &&!draft[category].includes(item.id))draft[category].push(item.id);
     renderList();
+    updateCustomizeCounts();
 });
 document.getElementById("pwCustomizeApply").addEventListener("click",()=>{
     if(!draft)return;
