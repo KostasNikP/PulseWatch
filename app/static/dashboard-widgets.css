@@ -875,3 +875,19 @@
         overflow-y:visible;
     }
 }
+
+
+/* Allow an open actions popover to appear above neighboring flex cards.
+   Its viewport-fixed coordinates are supplied by overview-options.js. */
+.overview-section .dashboard > .pw-options-active {
+    position:relative;
+    z-index:35;
+}
+.overview-section .dashboard .pw-overview-popup {
+    box-sizing:border-box;
+    z-index:99;
+}
+/* Avoid a nested sideways scrollbar if an unusually wide graph is saved. */
+.overview-section .dashboard .pw-overview-content > * {
+    min-width:0;
+}
