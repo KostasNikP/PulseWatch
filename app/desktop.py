@@ -10,16 +10,16 @@ import uvicorn
 from app.launch_admin_helper import launch_admin_helper
 
 
-APP_TITLE = "PulseWatch - System Monitor"
+APP_TITLE = "RigObserver - System Monitor"
 APP_URL = "http://127.0.0.1:8000/dashboard?v=0.3.0-gpu-fix1"
 
 
 def run_desktop():
-    """Start the PulseWatch desktop application."""
+    """Start the RigObserver desktop application."""
 
     import webview
 
-    print("Starting PulseWatch Desktop...")
+    print("Starting RigObserver Desktop...")
 
     # Start FastAPI in the background.
     config = uvicorn.Config(
@@ -35,7 +35,7 @@ def run_desktop():
     server_thread = threading.Thread(
         target=server.run,
         daemon=True,
-        name="PulseWatch-Backend",
+        name="RigObserver-Backend",
     )
 
     server_thread.start()
@@ -47,14 +47,14 @@ def run_desktop():
 
         if not server_thread.is_alive():
             raise RuntimeError(
-                "PulseWatch backend failed to start. "
+                "RigObserver backend failed to start. "
                 "Port 8000 may already be in use."
             )
 
         if time.monotonic() >= deadline:
             server.should_exit = True
             raise TimeoutError(
-                "PulseWatch backend startup timed out."
+                "RigObserver backend startup timed out."
             )
 
         time.sleep(0.1)
@@ -85,7 +85,7 @@ def run_desktop():
             background_color="#10131a",
         )
 
-        print("Opening PulseWatch Desktop...")
+        print("Opening RigObserver Desktop...")
 
         # Run the desktop GUI on the main thread.
         
@@ -104,12 +104,12 @@ def run_desktop():
 
     finally:
         # Stop the backend when the window closes.
-        print("Stopping PulseWatch...")
+        print("Stopping RigObserver...")
 
         server.should_exit = True
         server_thread.join(timeout=10)
 
-        print("PulseWatch Desktop closed.")
+        print("RigObserver Desktop closed.")
 
 
 def run_admin_helper():
@@ -129,7 +129,7 @@ def main():
         run_admin_helper()
         return
 
-    # Prevent multiple PulseWatch Desktop instances.
+    # Prevent multiple RigObserver Desktop instances.
     from app.single_instance import (
         acquire_single_instance,
         release_single_instance

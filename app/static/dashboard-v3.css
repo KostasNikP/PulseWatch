@@ -1,5 +1,5 @@
 /* ==========================================
-   PULSEWATCH v0.3.0
+   RIGOBSERVER v0.3.0
    DASHBOARD DESIGN SYSTEM
    ========================================== */
 
@@ -75,15 +75,11 @@ body {
 }
 
 .brand-icon {
-    background: linear-gradient(135deg,
-            #1766a4,
-            #29b6ff);
-
+    /* Temporary monogram until the approved logo asset is installed. */
+    background: linear-gradient(135deg, #7726da 0%, #b04cf2 48%, #ff9639 100%);
     color: #ffffff;
     border-radius: 12px;
-
-    box-shadow:
-        0 0 24px rgba(41, 182, 255, 0.15);
+    box-shadow: 0 0 22px rgba(164, 68, 238, 0.22);
 }
 
 .brand-name {
@@ -277,7 +273,7 @@ body {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — OVERVIEW GRID
+   RIGOBSERVER v0.3 — OVERVIEW GRID
    ========================================== */
 
 .overview-section .dashboard {
@@ -532,7 +528,7 @@ body {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — CPU DISPLAY MODES
+   RIGOBSERVER v0.3 — CPU DISPLAY MODES
    ========================================== */
 
 /* Make hidden views truly invisible */
@@ -694,7 +690,7 @@ body {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — CPU EXPAND CONTROLS
+   RIGOBSERVER v0.3 — CPU EXPAND CONTROLS
    ========================================== */
 
 .pw3-cpu-actions {
@@ -801,7 +797,7 @@ body.pw3-overlay-open {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — DRAG RESIZE
+   RIGOBSERVER v0.3 — DRAG RESIZE
    ========================================== */
 
 .pw3-cpu-card {
@@ -870,7 +866,7 @@ body.pw3-overlay-open {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — GPU PERFORMANCE WIDGET
+   RIGOBSERVER v0.3 — GPU PERFORMANCE WIDGET
    ========================================== */
 
 .pw3-gpu-card {
@@ -1170,7 +1166,7 @@ body.pw3-overlay-open {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — GPU DISPLAY MODES
+   RIGOBSERVER v0.3 — GPU DISPLAY MODES
    ========================================== */
 
 /* GAUGE VIEW */
@@ -1257,7 +1253,7 @@ body.pw3-overlay-open {
     }
 }
 /* ==========================================
-   PULSEWATCH v0.3 — GPU EXPAND AND DRAG RESIZE
+   RIGOBSERVER v0.3 — GPU EXPAND AND DRAG RESIZE
    ========================================== */
 
 .pw3-gpu-actions {

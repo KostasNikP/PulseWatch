@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="PulseWatch API",
+    title="RigObserver API",
     description="System and Network Monitoring API",
     version="1.0.0",
     lifespan=lifespan
@@ -70,7 +70,7 @@ async def prevent_dashboard_caching(request, call_next):
 
 @app.get("/")
 def home():
-    return {"message": "PulseWatch API is running"}
+    return {"message": "RigObserver API is running"}
 
 
 @app.get("/api/system")

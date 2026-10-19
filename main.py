@@ -13,7 +13,7 @@ try:
 
         os.system("cls")
 
-        print("========== PulseWatch ==========")
+        print("========== RigObserver ==========")
 
         print("\n===== CPU Information =====")
         print(f"CPU Usage: {system['cpu_percent']}%")
@@ -41,4 +41,4 @@ try:
         time.sleep(2)
 
 except KeyboardInterrupt:
-    print("\nPulseWatch stopped.")
+    print("\nRigObserver stopped.")
