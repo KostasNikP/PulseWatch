@@ -17,7 +17,8 @@ DefaultDirName={userpf}\RigObserver
 DefaultGroupName=RigObserver
 
 PrivilegesRequired=lowest
-SetupArchitecture=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 
 OutputDir=installer
 OutputBaseFilename=RigObserver_Setup_v0.3.0
