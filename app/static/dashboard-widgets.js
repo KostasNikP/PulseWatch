@@ -71,7 +71,7 @@ function groupOf(device) {
     if(device.category==="Memory")return "ram";
     if(device.category==="Storage")return "storage";
     if(device.category==="Network")return "network";
-    if(device.category==="Motherboard")return "motherboard";
+    if(device.category==="Motherboard"||device.category==="SuperIO")return "motherboard";
     return null;
 }
 function defaults(group,items) {
