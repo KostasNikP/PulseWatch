@@ -133,6 +133,7 @@ function getHardwareCategoryLabel(device) {
     if (category === "Cpu") return "CPU";
     if (category.startsWith("Gpu")) return "GPU";
     if (category === "Motherboard") return "MOTHERBOARD";
+    if (category === "SuperIO") return "BOARD CONTROLLER";
     if (category === "Memory") return "MEMORY";
     if (category === "Storage") return "STORAGE";
 
