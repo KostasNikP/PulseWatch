@@ -10,8 +10,8 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-AppPublisherURL=https://github.com/KostasNikP/PulseWatch
-AppSupportURL=https://github.com/KostasNikP/PulseWatch/issues
+AppPublisherURL=https://github.com/KostasNikP/RigObserver
+AppSupportURL=https://github.com/KostasNikP/RigObserver/issues
 
 DefaultDirName={userpf}\RigObserver
 DefaultGroupName=RigObserver

@@ -6,7 +6,7 @@ RigObserver is a local desktop application for monitoring CPU, GPU, RAM, storage
 
 Built with **Python, FastAPI, pywebview (WebView2), C# / .NET 10, LibreHardwareMonitor, and JavaScript**.
 
-> **Release status:** RigObserver **v0.3.0** has been built and tested on Windows, but its new installer has **not yet been published** to GitHub Releases. The existing [v0.2.0 release](https://github.com/KostasNikP/PulseWatch/releases/tag/v0.2.0) belongs to the earlier **PulseWatch** branding.
+> **Release status:** RigObserver **v0.3.0** has been built and tested on Windows, but its new installer has **not yet been published** to GitHub Releases. The existing [v0.2.0 release](https://github.com/KostasNikP/RigObserver/releases/tag/v0.2.0) belongs to the earlier **PulseWatch** branding.
 
 ## Features
 
@@ -51,7 +51,7 @@ The packaged version does **not** require installing Python or the .NET SDK sepa
 
 ### Download and installation
 
-The RigObserver v0.3.0 installer is being prepared for publication. When it is published, obtain **`RigObserver_Setup_v0.3.0.exe`** from the [official GitHub Releases page](https://github.com/KostasNikP/PulseWatch/releases). Until that happens, do not mistake the older PulseWatch v0.2.0 installer for RigObserver v0.3.0.
+The RigObserver v0.3.0 installer is being prepared for publication. When it is published, obtain **`RigObserver_Setup_v0.3.0.exe`** from the [official GitHub Releases page](https://github.com/KostasNikP/RigObserver/releases). Until that happens, do not mistake the older PulseWatch v0.2.0 installer for RigObserver v0.3.0.
 
 ### Your existing settings
 
@@ -68,7 +68,7 @@ The Windows application currently keeps using the legacy **`%LOCALAPPDATA%\Pulse
 Clone the repository (its GitHub URL has **not yet been renamed**):
 
 ```powershell
-git clone https://github.com/KostasNikP/PulseWatch.git
+git clone https://github.com/KostasNikP/RigObserver.git
 cd PulseWatch
 ```
 
