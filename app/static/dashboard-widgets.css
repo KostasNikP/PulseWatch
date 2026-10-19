@@ -692,7 +692,18 @@
 .app-layout.pw-sidebar-collapsed {
     grid-template-columns:76px minmax(0,1fr);
 }
-.sidebar {position:relative;}
+/* Keep navigation on screen while the main dashboard scrolls.
+   sticky also establishes the positioning context for the toggle. */
+.sidebar {
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    max-height:100vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+}
 .pw-sidebar-toggle {
     position:absolute;
     top:20px;right:9px;
@@ -718,6 +729,14 @@
     flex:0 0 auto;width:24px;
 }
 @media(max-width:768px){
+    /* Mobile uses normal page flow instead of a viewport-height sidebar. */
+    .sidebar {
+        position:relative;
+        top:auto;
+        max-height:none;
+        height:auto;
+        overflow:visible;
+    }
     .app-layout.pw-sidebar-collapsed {grid-template-columns:1fr;}
     .pw-sidebar-collapsed .sidebar {height:auto;min-height:75px;}
     .pw-sidebar-collapsed .sidebar-section {display:none;}
