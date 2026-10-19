@@ -891,3 +891,33 @@
 .overview-section .dashboard .pw-overview-content > * {
     min-width:0;
 }
+
+
+/* Group extra-card display modes and the actions menu together.
+   On narrow cards, wrap the entire control group below the title,
+   never leave the ⋯ button orphaned on a separate line. */
+.pw-extra-header .pw-extra-actions {
+    display:flex;
+    flex:0 1 auto;
+    min-width:0;
+    max-width:100%;
+    margin-left:auto;
+    align-items:center;
+    gap:7px;
+}
+.pw-extra-header .pw-extra-actions > .pw-extra-view-switch {
+    flex:1 1 auto;
+    min-width:0;
+    margin-left:0;
+}
+.pw-extra-header .pw-extra-actions > .pw-overview-options {
+    flex:0 0 auto;
+    margin-left:0;
+}
+@media(max-width:700px){
+    .pw-extra-header .pw-extra-actions {
+        width:100%;
+        justify-content:flex-start;
+        margin-left:0;
+    }
+}
