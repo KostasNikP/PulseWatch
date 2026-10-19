@@ -121,6 +121,7 @@ function isSupportedHardware(device) {
         category === "Cpu" ||
         category.startsWith("Gpu") ||
         category === "Motherboard" ||
+        category === "SuperIO" ||
         category === "Memory" ||
         category === "Storage"
     );
