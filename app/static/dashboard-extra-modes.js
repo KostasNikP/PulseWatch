@@ -62,6 +62,47 @@ for(const group of GROUPS){
     for(const button of buttons)
         button.addEventListener("click",()=>setMode(button.dataset.pwExtraView));
     setMode(mode);
+
+    // When an overview card is resized very narrowly, a four-button
+    // segmented switch needs two lines and leaves the ellipsis orphaned.
+    // Show one accessible native mode selector instead, wired to exactly
+    // the same view handlers and saved preference.
+    const actions=card.querySelector(".pw-extra-actions");
+    if(actions){
+        const select=document.createElement("select");
+        select.className="pw-extra-compact-selector";
+        select.setAttribute("aria-label",group+" display mode");
+        for(const option of MODES){
+            const entry=document.createElement("option");
+            entry.value=option;
+            entry.textContent=option[0].toUpperCase()+option.slice(1);
+            select.appendChild(entry);
+        }
+        select.value=mode;
+        actions.insertBefore(select,actions.querySelector(".pw-overview-options"));
+        select.addEventListener("change",()=>{
+            const target=buttons.find(b=>b.dataset.pwExtraView===select.value);
+            if(target)target.click();
+        });
+
+        // Changes made through the full-sized segmented buttons still
+        // synchronize the compact selector.
+        if(typeof MutationObserver!=="undefined"){
+            new MutationObserver(()=>{
+                const view=card.dataset.view;
+                if(MODES.includes(view))select.value=view;
+            }).observe(card,{attributes:true,attributeFilter:["data-view"]});
+        }
+        const measure=()=>card.classList.toggle(
+            "pw-extra-tight",card.getBoundingClientRect().width<455
+        );
+        measure();
+        if(typeof ResizeObserver!=="undefined"){
+            new ResizeObserver(measure).observe(card);
+        }else{
+            window.addEventListener("resize",measure);
+        }
+    }
 }
 function priority(group,entries){
     const primaryId=group==="ram"?"ram:metrics/used_pct":

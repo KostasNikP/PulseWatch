@@ -921,3 +921,53 @@
         margin-left:0;
     }
 }
+
+
+/* ========= v0.3 UI polish: tight card controls ========= */
+/* Never truncate a four-way control across two rows within a narrow
+   system card. Switching modes still uses the same underlying handlers. */
+.pw-extra-compact-selector {
+    display:none;
+    flex:0 1 155px;
+    min-width:0;
+    width:145px;
+    max-width:100%;
+    min-height:34px;
+    padding:6px 26px 6px 10px;
+    border:1px solid #3c5164;
+    border-radius:8px;
+    background:#142637;
+    color:#e9f6ff;
+    font-size:12px;
+    font-weight:650;
+    cursor:pointer;
+    color-scheme:dark;
+}
+.pw-extra-compact-selector:focus-visible {
+    outline:2px solid #7bd7fb;
+    outline-offset:2px;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-extra-view-switch {
+    display:none!important;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-extra-compact-selector {
+    display:block;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions {
+    flex:0 1 auto;
+    min-width:0;
+    max-width:100%;
+    gap:7px;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-overview-options {
+    margin-left:0;
+}
+/* The metric ids remain in the DOM for live updates, but the visible
+   single-value summaries repeated the same readings in sensor widgets
+   (and again in Graph / Gauge). Recover that vertical space. */
+.pw-extra-card .pw-extra-stats {
+    display:none!important;
+}
+.pw-extra-card .pw-overview-content > .pw-mini-region {
+    margin-top:3px;
+}
