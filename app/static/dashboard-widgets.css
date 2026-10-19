@@ -338,3 +338,180 @@
 .pw-reset-dialog .pw-reset-preserved {
     color: #82c8af;
 }
+
+/* ========= v0.3 — continuous parent-card layout ========= */
+.overview-section .dashboard {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:18px;
+}
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+    box-sizing:border-box;
+    flex:0 0 auto;
+    --pw-default-width:calc(50% - 9px);
+    width:var(--pw-parent-width,var(--pw-default-width));
+    min-width:min(310px,100%);
+    max-width:100%;
+    height:auto;
+    align-self:flex-start;
+    overflow:auto;
+    scrollbar-width:thin;
+}
+.overview-section .dashboard > .pw3-cpu-card[data-view="graph"],
+.overview-section .dashboard > .pw3-gpu-card[data-view="graph"],
+.overview-section .dashboard > .pw-network-card {
+    --pw-default-width:100%;
+}
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card).pw-parent-is-resizing {
+    transition:none;
+    outline:1px solid var(--mini-accent,#3ebcf4);
+}
+.pw-extra-card .pw3-resize-handle {
+    display:block;
+    position:absolute;
+    right:7px;
+    bottom:7px;
+    z-index:2;
+    cursor:nwse-resize;
+}
+[data-pw-parent-resize] {
+    cursor:nwse-resize;
+    touch-action:none;
+    user-select:none;
+}
+[data-pw-parent-resize]:hover,
+[data-pw-parent-resize].is-resizing {
+    color:var(--pw-extra-accent,#4dcaf4);
+    border-color:var(--pw-extra-accent,#4dcaf4);
+}
+@media(max-width:700px) {
+    .overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+        width:100% !important;
+        height:auto !important;
+        min-width:0;
+    }
+    [data-pw-parent-resize] {display:none!important;}
+}
+
+/* Real non-widget display modes: independent gauge/graph/compact. */
+.pw-extra-card .pw-extra-header {
+    flex-wrap:wrap;
+    align-items:center;
+}
+.pw-extra-view-switch {
+    flex:0 1 auto;
+    margin-left:auto;
+    display:flex;
+    max-width:100%;
+    flex-wrap:wrap;
+}
+.pw-extra-card .pw-extra-view-switch button.active {
+    background:var(--pw-extra-accent);
+    color:#091722;
+}
+.pw-extra-card:not([data-view="widgets"]) .pw-mini-layout-controls,
+.pw-extra-card:not([data-view="widgets"]) .pw-mini-region {
+    display:none!important;
+}
+.pw-extra-card[data-view="compact"] .pw-extra-heading p,
+.pw-extra-card[data-view="compact"] .pw-extra-stats {
+    display:none;
+}
+.pw-extra-primary {
+    min-height:215px;
+    border:1px solid #33495d;
+    border-radius:12px;
+    background:rgba(8,15,24,.55);
+    padding:18px;
+    margin:12px 0 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:9px;
+}
+.pw-extra-primary[hidden] {display:none!important;}
+.pw-extra-primary-label {color:#9db4c8;font-size:12px;}
+.pw-extra-primary-value {
+    color:var(--pw-extra-accent);
+    font-size:clamp(23px,3vw,36px);
+    font-variant-numeric:tabular-nums;
+}
+.pw-extra-primary svg {display:none;width:100%;height:145px;min-height:90px;}
+.pw-extra-primary-line {
+    fill:none;
+    stroke:var(--pw-extra-accent);
+    stroke-width:2.3;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+}
+.pw-extra-primary-ring {
+    display:none;
+    place-items:center;
+    position:relative;
+    margin:10px auto 15px;
+    width:min(166px,90%);
+    aspect-ratio:1;
+    border-radius:50%;
+    background:conic-gradient(var(--pw-extra-accent) 0deg var(--pw-primary-angle,0deg),
+                              #2b4053 var(--pw-primary-angle,0deg) 360deg);
+}
+.pw-extra-primary-ring::after {
+    content:"";
+    position:absolute;inset:13%;border-radius:50%;
+    background:#101a26;
+}
+.pw-extra-primary-ring strong {
+    position:relative;z-index:1;color:#f0f7ff;font-size:17px;
+}
+.pw-extra-primary-details {
+    display:grid;
+    width:100%;
+    grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));
+    gap:9px;
+}
+.pw-extra-primary-reading {
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    background:#122131;
+    border:1px solid #30465a;
+    padding:10px;
+    border-radius:8px;
+    font-size:11px;
+}
+.pw-extra-primary-reading span {color:#a7bacb;}
+.pw-extra-primary-reading strong {color:#e4f1fc;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.pw-extra-mode-graph svg {display:block;}
+.pw-extra-mode-gauge .pw-extra-primary-ring {display:grid;}
+.pw-extra-mode-gauge .pw-extra-primary-value {display:none;}
+.pw-extra-mode-compact {min-height:0;margin:8px 0 12px;padding:12px;}
+.pw-extra-mode-compact .pw-extra-primary-label,
+.pw-extra-mode-compact .pw-extra-primary-value,
+.pw-extra-mode-compact svg,
+.pw-extra-mode-compact .pw-extra-primary-ring {display:none;}
+.pw-motherboard-card {--pw-extra-accent:#ec8dce;}
+.pw-motherboard-card .pw-mini-widget {--mini-accent:#ec8dce;}
+
+/* Hardware Monitor: masonry-style columns instead of row-height gaps. */
+.hardware-grid {
+    display:block;
+    columns:2;
+    column-gap:16px;
+}
+.hardware-grid > .hardware-device-card {
+    display:inline-block;
+    vertical-align:top;
+    width:100%;
+    box-sizing:border-box;
+    break-inside:avoid;
+    margin:0 0 16px;
+}
+.hardware-device-header {padding:17px 18px;gap:5px;}
+.hardware-device-groups {padding:10px;}
+.hardware-reading-group {margin-bottom:7px;}
+.hardware-group-heading {padding:10px 13px;}
+.hardware-readings {max-height:280px;}
+@media(min-width:1900px) { .hardware-grid {columns:3;} }
+@media(max-width:1250px) { .hardware-grid {columns:1;} }
