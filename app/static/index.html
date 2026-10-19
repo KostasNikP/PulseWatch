@@ -181,6 +181,7 @@
 
                     
                         </div>
+                        <div class="pw-overview-content" data-pw-content="cpu">
                     
                         <div class="pw3-cpu-stats">
                     
@@ -210,6 +211,7 @@
                              aria-label="Customizable CPU sensors"></div>
 
                         <!-- CPU WIDGET RESIZE HANDLE -->
+                        </div>
                         <button type="button" id="pw3CpuResize" data-pw-parent-resize="cpu" class="pw3-resize-handle" aria-label="Resize CPU widget"
                             title="Resize CPU widget">
                             <span aria-hidden="true">⤡</span>
@@ -270,6 +272,7 @@
                                     
                                 </div>
                             </div>
+                        <div class="pw-overview-content" data-pw-content="gpu">
                         
                             <div class="pw3-gpu-content">
                         
@@ -309,7 +312,8 @@
                             <div id="pwGpuMiniWidgets" class="pw-mini-region" hidden
                                  aria-label="Customizable GPU sensors"></div>
 
-                            <button type="button" id="pw3GpuResize" data-pw-parent-resize="gpu"
+                            </div>
+                        <button type="button" id="pw3GpuResize" data-pw-parent-resize="gpu"
                                     class="pw3-resize-handle"
                                     aria-label="Resize GPU widget"
                                     title="Drag to resize GPU widget">
@@ -355,11 +359,13 @@
                                     </div>
                                 </details>
                             </header>
+                        <div class="pw-overview-content" data-pw-content="ram">
                             <div class="pw-extra-stats"><span>Memory usage <strong id="ram">--%</strong></span></div>
                             <div class="pw-extra-primary" hidden></div>
                             
                             <div id="pwRamMiniWidgets"
                                  class="pw-mini-region" aria-label="RAM customizable sensors"></div>
+                        </div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="ram" aria-label="Resize RAM card" title="Drag to freely resize RAM card"><span aria-hidden="true">⤡</span></button>
                         </article>
 
@@ -395,11 +401,13 @@
                                     </div>
                                 </details>
                             </header>
+                        <div class="pw-overview-content" data-pw-content="storage">
                             <div class="pw-extra-stats"><span>C: used capacity <strong id="disk">--%</strong></span></div>
                             <div class="pw-extra-primary" hidden></div>
                             
                             <div id="pwStorageMiniWidgets"
                                  class="pw-mini-region" aria-label="STORAGE customizable sensors"></div>
+                        </div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="storage" aria-label="Resize STORAGE card" title="Drag to freely resize STORAGE card"><span aria-hidden="true">⤡</span></button>
                         </article>
 
@@ -435,11 +443,13 @@
                                     </div>
                                 </details>
                             </header>
+                        <div class="pw-overview-content" data-pw-content="network">
                             <div class="pw-extra-stats"><span>↓ Download <strong id="download">-- Mbps</strong></span><span>↑ Upload <strong id="upload">-- Mbps</strong></span></div>
                             <div class="pw-extra-primary" hidden></div>
                             
                             <div id="pwNetworkMiniWidgets"
                                  class="pw-mini-region" aria-label="NETWORK customizable sensors"></div>
+                        </div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="network" aria-label="Resize NETWORK card" title="Drag to freely resize NETWORK card"><span aria-hidden="true">⤡</span></button>
                         </article>
                         <!-- MOTHERBOARD SENSORS -->
@@ -471,10 +481,12 @@
                                     </div>
                                 </details>
                             </header>
+                        <div class="pw-overview-content" data-pw-content="motherboard">
                             <div class="pw-extra-primary" hidden></div>
                             
                             <div id="pwMotherboardMiniWidgets" class="pw-mini-region" aria-label="Motherboard customizable sensors"></div>
-                            <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="motherboard" aria-label="Resize Motherboard card" title="Drag to freely resize Motherboard card"><span aria-hidden="true">⤡</span></button>
+                            </div>
+                        <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="motherboard" aria-label="Resize Motherboard card" title="Drag to freely resize Motherboard card"><span aria-hidden="true">⤡</span></button>
                         </article>
                     </div>
 
