@@ -2,13 +2,13 @@
 @echo off
 setlocal EnableExtensions
 
-title PulseWatch - Setup
+title RigObserver - Setup
 
 cd /d "%~dp0"
 
 echo.
 echo ========================================
-echo          PULSEWATCH INSTALLER
+echo          RIGOBSERVER INSTALLER
 echo ========================================
 echo.
 
@@ -97,7 +97,7 @@ if exist "%BRIDGE_DLL%" (
         echo.
         echo ERROR: Sensor Bridge DLL is in use or inaccessible.
         echo.
-        echo Close PulseWatch and the Administrator Sensor Helper.
+        echo Close RigObserver and the Administrator Sensor Helper.
         echo Wait a few seconds and run Setup again.
         goto :failed
     )
@@ -122,10 +122,10 @@ echo ========================================
 echo       INSTALLATION COMPLETED
 echo ========================================
 echo.
-echo PulseWatch is ready.
+echo RigObserver is ready.
 echo.
-echo To start PulseWatch:
-echo Double-click start_pulsewatch.bat
+echo To start RigObserver:
+echo Double-click start_rigobserver.bat
 echo.
 pause
 

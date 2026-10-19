@@ -22,7 +22,7 @@ SERVER_TIMEOUT_SECONDS = 15
 
 
 def server_is_running():
-    """Check whether the PulseWatch API is available."""
+    """Check whether the RigObserver API is available."""
 
     try:
         with urllib.request.urlopen(
@@ -61,9 +61,9 @@ async def main():
         exist_ok=True
     )
 
-    print("PulseWatch Administrator Sensor Helper")
+    print("RigObserver Administrator Sensor Helper")
     print("Reading advanced hardware sensors...")
-    print("Monitoring PulseWatch server status...")
+    print("Monitoring RigObserver server status...")
     print("Press Ctrl+C to stop.\n")
 
     started_at = time.monotonic()
@@ -92,7 +92,7 @@ async def main():
                     >= STARTUP_GRACE_SECONDS
                 ):
                     print(
-                        "PulseWatch server did not start. "
+                        "RigObserver server did not start. "
                         "Stopping Sensor Helper."
                     )
                     break
@@ -102,7 +102,7 @@ async def main():
                 >= SERVER_TIMEOUT_SECONDS
             ):
                 print(
-                    "PulseWatch server is offline. "
+                    "RigObserver server is offline. "
                     "Stopping Sensor Helper."
                 )
                 break

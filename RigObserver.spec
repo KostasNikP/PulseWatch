@@ -28,8 +28,8 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='PulseWatch',
-    icon='assets/PulseWatch.ico',
+    name='RigObserver',
+    icon='assets/RigObserver.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -48,5 +48,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='PulseWatch',
+    name='RigObserver',
 )

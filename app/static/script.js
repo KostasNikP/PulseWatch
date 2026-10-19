@@ -68,11 +68,327 @@ const systemChart = createChart(
     100
 );
 
+/* ==========================================
+   NETWORK TRAFFIC CHART
+   ========================================== */
+
 const networkChart = createChart(
     "networkChart",
     ["Download Mbps", "Upload Mbps"],
     ["#38bdf8", "#f59e0b"]
 );
+
+
+
+/* ==========================================
+   PULSEWATCH v0.3 — LIVE CPU GRAPH
+   ========================================== */
+
+const overviewCpuChart = createChart(
+    "overviewCpuChart",
+    ["CPU Usage %"],
+    ["#ff9e45"],
+    100
+);
+
+// Orange area below the CPU line
+overviewCpuChart.data.datasets[0].fill = true;
+overviewCpuChart.data.datasets[0].backgroundColor =
+    "rgba(255, 158, 69, 0.12)";
+
+overviewCpuChart.data.datasets[0].borderWidth = 2.5;
+overviewCpuChart.data.datasets[0].tension = 0.35;
+overviewCpuChart.data.datasets[0].pointRadius = 0;
+
+overviewCpuChart.update("none");
+
+/* ==========================================
+   PULSEWATCH v0.3 — GPU LIVE GRAPH
+   ========================================== */
+
+const overviewGpuChart = createChart(
+    "overviewGpuChart",
+    ["GPU Usage %"],
+    ["#39cfff"],
+    100
+);
+
+// Blue area below the GPU line
+overviewGpuChart.data.datasets[0].fill = true;
+
+overviewGpuChart.data.datasets[0].backgroundColor =
+    "rgba(57, 207, 255, 0.12)";
+
+overviewGpuChart.data.datasets[0].borderWidth = 2.5;
+overviewGpuChart.data.datasets[0].tension = 0.35;
+overviewGpuChart.data.datasets[0].pointRadius = 0;
+
+overviewGpuChart.update("none");
+
+/* ==========================================
+   PULSEWATCH v0.3 — GPU DISPLAY MODES
+   ========================================== */
+
+const gpuCard = document.querySelector(".pw3-gpu-card");
+
+const gpuViewButtons = gpuCard.querySelectorAll(
+    ".pw3-view-switch button[data-gpu-view]"
+);
+
+const gpuGaugeView = gpuCard.querySelector(
+    ".pw3-gpu-gauge"
+);
+
+const gpuContent = gpuCard.querySelector(
+    ".pw3-gpu-content"
+);
+
+const gpuGraphView = gpuCard.querySelector(
+    ".pw3-gpu-chart-container"
+);
+
+const GPU_VIEW_STORAGE_KEY = "pulsewatch_gpu_view_v3";
+
+function setGpuView(view) {
+
+    const validViews = ["gauge", "graph", "compact", "widgets"];
+
+    if (!validViews.includes(view)) {
+        view = "gauge";
+    }
+
+    gpuCard.dataset.view = view;
+
+    // Show the circular Gauge only in Gauge mode
+    gpuGaugeView.style.display =
+        view === "gauge" ? "" : "none";
+
+    // Keep hardware statistics visible
+    gpuContent.style.gridTemplateColumns =
+        view === "gauge" ? "" : "1fr";
+
+    // Show the live chart only in Graph mode
+    gpuGraphView.hidden = view !== "graph";
+    gpuContent.hidden = view === "widgets";
+    document.getElementById("pwGpuMiniWidgets").hidden = view !== "widgets";
+
+    // Update active buttons
+    gpuViewButtons.forEach(button => {
+
+        const isActive =
+            button.dataset.gpuView === view;
+
+        button.classList.toggle("active", isActive);
+
+        button.setAttribute(
+            "aria-pressed",
+            String(isActive)
+        );
+    });
+
+    // Resize Chart.js after displaying the graph
+    if (view === "graph") {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                overviewGpuChart.resize();
+            });
+        });
+    }
+
+    // Save display preference
+    try {
+        localStorage.setItem(
+            GPU_VIEW_STORAGE_KEY,
+            view
+        );
+    } catch (error) {
+        console.warn("Could not save GPU view:", error);
+    }
+}
+
+// GPU buttons
+gpuViewButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+        setGpuView(button.dataset.gpuView);
+    });
+
+});
+
+// Restore GPU view after restarting PulseWatch
+let savedGpuView = "gauge";
+
+try {
+    savedGpuView =
+        localStorage.getItem(GPU_VIEW_STORAGE_KEY)
+        || "gauge";
+} catch (error) {
+    console.warn("Could not load GPU view:", error);
+}
+
+setGpuView(savedGpuView);
+
+
+/* ==========================================
+   PULSEWATCH v0.3 — CPU DISPLAY MODES
+   ========================================== */
+
+const cpuCard = document.querySelector(".pw3-cpu-card");
+
+const cpuViewButtons = cpuCard.querySelectorAll(
+    ".pw3-view-switch button[data-view]"
+);
+
+const cpuGraphView = cpuCard.querySelector(
+    ".pw3-cpu-chart-container"
+);
+
+// Create the CPU Gauge view
+const cpuGaugeView = document.createElement("div");
+
+cpuGaugeView.className = "pw3-cpu-gauge-view";
+cpuGaugeView.hidden = true;
+
+cpuGaugeView.innerHTML = `
+    <div class="pw3-cpu-gauge-ring"
+         role="img"
+         aria-label="CPU usage">
+
+        <div class="pw3-cpu-gauge-center">
+            <strong id="pw3CpuGaugeValue">--%</strong>
+            <span>CPU Usage</span>
+        </div>
+
+    </div>
+
+    <p>Real-time processor utilization</p>
+`;
+
+cpuGraphView.after(cpuGaugeView);
+
+const cpuGaugeRing = cpuGaugeView.querySelector(
+    ".pw3-cpu-gauge-ring"
+);
+
+const cpuGaugeValue = document.getElementById(
+    "pw3CpuGaugeValue"
+);
+
+const CPU_VIEW_STORAGE_KEY = "pulsewatch_cpu_view_v3";
+
+
+// Update CPU Gauge using live measurements
+function updateCpuGauge(value) {
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) return;
+
+    const usage = Math.max(
+        0,
+        Math.min(100, numericValue)
+    );
+
+    const angle = usage * 3.6;
+
+    cpuGaugeRing.style.setProperty(
+        "--cpu-gauge-angle",
+        `${angle}deg`
+    );
+
+    cpuGaugeValue.textContent =
+        `${usage.toFixed(1)}%`;
+
+    cpuGaugeRing.setAttribute(
+        "aria-label",
+        `CPU usage ${usage.toFixed(1)} percent`
+    );
+}
+
+
+// Switch between Graph, Gauge and Compact
+function setCpuView(view) {
+
+    const validViews = [
+        "graph",
+        "gauge",
+        "compact",
+        "widgets"
+    ];
+
+    if (!validViews.includes(view)) {
+        view = "graph";
+    }
+
+    cpuCard.dataset.view = view;
+
+    cpuGraphView.hidden = view !== "graph";
+    cpuGaugeView.hidden = view !== "gauge";
+    document.getElementById("pwCpuMiniWidgets").hidden = view !== "widgets";
+
+    cpuViewButtons.forEach(button => {
+
+        const isActive =
+            button.dataset.view === view;
+
+        button.classList.toggle(
+            "active",
+            isActive
+        );
+
+        button.setAttribute(
+            "aria-pressed",
+            String(isActive)
+        );
+    });
+
+    // Resize Chart.js when returning to Graph mode
+    if (view === "graph") {
+        requestAnimationFrame(() => {
+            overviewCpuChart.resize();
+        });
+    }
+
+    // Save user preference
+    try {
+        localStorage.setItem(
+            CPU_VIEW_STORAGE_KEY,
+            view
+        );
+    } catch (error) {
+        console.warn(
+            "Could not save CPU view:",
+            error
+        );
+    }
+}
+
+
+// Handle button clicks
+cpuViewButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+        setCpuView(button.dataset.view);
+    });
+
+});
+
+
+// Restore previously selected view
+let savedCpuView = "graph";
+
+try {
+    savedCpuView =
+        localStorage.getItem(CPU_VIEW_STORAGE_KEY)
+        || "graph";
+} catch (error) {
+    console.warn(
+        "Could not load CPU view:",
+        error
+    );
+}
+
+setCpuView(savedCpuView);
 
 const historySystemChart = createChart(
     "historySystemChart",
@@ -350,9 +666,20 @@ async function updateDashboard() {
 
         setConnectionState(isFresh ? "online" : "stale");
 
+        // RAM, Storage and Network widgets use live psutil measurements.
+        // Keep the regular dashboard and connection state independent.
+        if (isFresh) {
+            try {
+                window.PulseWatchWidgets?.updateMetrics(metrics);
+            } catch (error) {
+                console.warn("System widget refresh failed:", error);
+            }
+        }
+
         // Update metric cards
         document.getElementById("cpu").textContent =
             `${system.cpu_percent}%`;
+            updateCpuGauge(system.cpu_percent);
 
         document.getElementById("ram").textContent =
             `${system.ram_percent}%`;
@@ -385,6 +712,14 @@ async function updateDashboard() {
             system.cpu_percent,
             system.ram_percent
         ]);
+
+        // Update the new CPU overview graph
+        addChartData(
+            overviewCpuChart,
+            timeLabel,
+            [system.cpu_percent]
+        );
+
 
         addChartData(networkChart, timeLabel, [
             network.download_mbps,
@@ -526,3 +861,6 @@ setConnectionState("connecting");
 updateActiveNavigation();
 loadHistory();
 refreshDashboard();
+
+
+// Parent card free resizing is handled by dashboard-parent-layout.js.

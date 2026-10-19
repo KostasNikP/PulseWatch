@@ -13,6 +13,12 @@ const closeSensorSettingsButton = document.getElementById("closeSensorSettings")
 const sensorSettingsList = document.getElementById("sensorSettingsList");
 
 const SENSOR_STORAGE_KEY = "pulsewatch_hidden_sensors_v1";
+const HARDWARE_LAYOUT_KEY = "pulsewatch_hardware_card_layout_v1";
+const hardwareLayoutDialog = document.getElementById("pwHardwareLayoutDialog");
+const hardwareLayoutList = document.getElementById("pwHardwareLayoutList");
+const DEFAULT_CATEGORY_ORDER = ["Cpu","Gpu","Memory","Storage","Motherboard","SuperIO"];
+let hardwareLayout = {order:[],hidden:[]};
+let hardwareDraft = null;
 const HARDWARE_REFRESH_INTERVAL = 3000;
 const SENSOR_STALE_SECONDS = 15;
 
@@ -98,6 +104,40 @@ function loadSensorPreferences() {
     }
 }
 
+function deviceKey(device) {
+    return String(device.id || device.name);
+}
+function defaultRank(device) {
+    const cat=(device.category || "").startsWith("Gpu") ? "Gpu" : device.category;
+    const index=DEFAULT_CATEGORY_ORDER.indexOf(cat);
+    return index < 0 ? 999 : index;
+}
+function orderedDevices(devices, order) {
+    const position=new Map(order.map((id,index)=>[id,index]));
+    return [...devices].sort((a,b)=>{
+        const ai=position.get(deviceKey(a)),bi=position.get(deviceKey(b));
+        if(ai!==undefined && bi!==undefined) return ai-bi;
+        if(ai!==undefined)return -1;
+        if(bi!==undefined)return 1;
+        return defaultRank(a)-defaultRank(b) || a.name.localeCompare(b.name);
+    });
+}
+function loadHardwareLayout() {
+    try {
+        const stored=JSON.parse(localStorage.getItem(HARDWARE_LAYOUT_KEY)||"null");
+        if(stored && Array.isArray(stored.order) && Array.isArray(stored.hidden)){
+            hardwareLayout={
+                order:stored.order.filter(x=>typeof x==="string"),
+                hidden:stored.hidden.filter(x=>typeof x==="string")
+            };
+        }
+    }catch(error){console.warn("Could not restore hardware card layout:",error);}
+}
+function saveHardwareLayout() {
+    try{localStorage.setItem(HARDWARE_LAYOUT_KEY,JSON.stringify(hardwareLayout));}
+    catch(error){console.warn("Could not save hardware layout:",error);}
+}
+
 function saveSensorPreferences() {
     try {
         localStorage.setItem(
@@ -121,6 +161,7 @@ function isSupportedHardware(device) {
         category === "Cpu" ||
         category.startsWith("Gpu") ||
         category === "Motherboard" ||
+        category === "SuperIO" ||
         category === "Memory" ||
         category === "Storage"
     );
@@ -132,6 +173,7 @@ function getHardwareCategoryLabel(device) {
     if (category === "Cpu") return "CPU";
     if (category.startsWith("Gpu")) return "GPU";
     if (category === "Motherboard") return "MOTHERBOARD";
+    if (category === "SuperIO") return "BOARD CONTROLLER";
     if (category === "Memory") return "MEMORY";
     if (category === "Storage") return "STORAGE";
 
@@ -511,11 +553,11 @@ function createHardwareCard(device, sensors) {
 function renderHardwareDashboard() {
     if (!latestHardwareSnapshot) return;
 
-    const visibleDevices = (
-        latestHardwareSnapshot.hardware || []
-    )
-        .filter(isSupportedHardware)
-        .map(device => ({
+    const visibleDevices = orderedDevices(
+        (latestHardwareSnapshot.hardware || []).filter(device =>
+            isSupportedHardware(device) && !hardwareLayout.hidden.includes(deviceKey(device))
+        ), hardwareLayout.order
+    ).map(device => ({
             device,
             sensors: getValidSensors(device).filter(sensor =>
                 !hiddenSensors.has(getSensorKey(device, sensor))
@@ -804,6 +846,218 @@ async function updateHardwareMonitor() {
 
         const age = Date.now() / 1000 - snapshot.timestamp;
 
+        // Optional sensor widgets should never interrupt core monitoring.
+        try {
+            window.PulseWatchWidgets?.update(snapshot);
+        } catch (widgetError) {
+            console.warn("Custom sensor widget error:", widgetError);
+        }
+
+        /* ==========================================
+           PULSEWATCH v0.3 — CPU OVERVIEW METRICS
+           ========================================== */
+
+        const cpuTemperatureElement =
+            document.getElementById("overviewCpuTemp");
+
+        const cpuClockElement =
+            document.getElementById("overviewCpuClock");
+
+        if (cpuTemperatureElement && cpuClockElement) {
+
+            const isFresh =
+                Number.isFinite(age) &&
+                Math.abs(age) <= SENSOR_STALE_SECONDS;
+
+            const cpuDevice = snapshot.hardware.find(
+                device => device.category === "Cpu"
+            );
+
+            const highlights = isFresh && cpuDevice
+                ? getKeySensors(
+                    cpuDevice,
+                    getValidSensors(cpuDevice)
+                )
+                : [];
+
+            const temperature = highlights.find(
+                item => item.label === "Temperature"
+            )?.sensor;
+
+            const clock = highlights.find(
+                item => item.label === "Clock"
+            )?.sensor;
+
+            cpuTemperatureElement.textContent = temperature
+                ? `${temperature.value.toFixed(1)} °C`
+                : "-- °C";
+
+            cpuClockElement.textContent = clock
+                ? `${Math.round(clock.value).toLocaleString("en-US")} MHz`
+                : "-- MHz";
+        }
+
+        /* ==========================================
+           PULSEWATCH v0.3 — GPU OVERVIEW METRICS
+           ========================================== */
+
+        const gpuNameElement =
+            document.getElementById("overviewGpuName");
+
+        const gpuGaugeValue =
+            document.getElementById("overviewGpuGaugeValue");
+
+        const gpuGauge =
+            document.querySelector(".pw3-gpu-gauge");
+
+        const gpuTempElement =
+            document.getElementById("overviewGpuTemp");
+
+        const gpuClockElement =
+            document.getElementById("overviewGpuClock");
+
+        const gpuVramElement =
+            document.getElementById("overviewGpuVram");
+
+
+        if (
+            gpuNameElement &&
+            gpuGaugeValue &&
+            gpuGauge &&
+            gpuTempElement &&
+            gpuClockElement &&
+            gpuVramElement
+        ) {
+            const gpuDevice = snapshot.hardware.find(
+                device => (device.category || "").startsWith("Gpu")
+            );
+
+            const freshGpuData =
+                Number.isFinite(age) &&
+                Math.abs(age) <= SENSOR_STALE_SECONDS;
+
+            const sensors = gpuDevice && freshGpuData
+                ? getValidSensors(gpuDevice)
+                : [];
+
+            const highlights = gpuDevice && freshGpuData
+                ? getKeySensors(gpuDevice, sensors)
+                : [];
+
+            // GPU model
+            gpuNameElement.textContent = gpuDevice
+                ? gpuDevice.name
+                : "GPU not detected";
+
+            // GPU usage
+            const usage = highlights.find(
+                item => item.label === "Usage"
+            )?.sensor;
+
+            if (usage) {
+                const percent = Math.max(
+                    0,
+                    Math.min(100, usage.value)
+                );
+
+
+                // A chart failure must not mark the hardware sensors OFFLINE.
+                // This also tolerates a WebView2 cache with an older script.js.
+                if (
+                    typeof addChartData === "function" &&
+                    typeof overviewGpuChart !== "undefined"
+                ) {
+                    try {
+                        addChartData(
+                            overviewGpuChart,
+                            new Date(snapshot.timestamp * 1000)
+                                .toLocaleTimeString("el-GR"),
+                            [percent]
+                        );
+                    } catch (chartError) {
+                        console.warn(
+                            "GPU live graph update failed:",
+                            chartError
+                        );
+                    }
+                }
+
+
+                gpuGaugeValue.textContent =
+                    `${percent.toFixed(1)}%`;
+
+                gpuGauge.style.setProperty(
+                    "--pw3-gpu-angle",
+                    `${percent * 3.6}deg`
+                );
+            } else {
+                gpuGaugeValue.textContent = "--%";
+
+                gpuGauge.style.setProperty(
+                    "--pw3-gpu-angle",
+                    "0deg"
+                );
+            }
+
+            // GPU temperature
+            const temperature = highlights.find(
+                item => item.label === "Temperature"
+            )?.sensor;
+
+            gpuTempElement.textContent = temperature
+                ? `${temperature.value.toFixed(1)} °C`
+                : "-- °C";
+
+            // GPU core clock
+            const clock = highlights.find(
+                item => item.label === "Core Clock"
+            )?.sensor;
+
+            gpuClockElement.textContent = clock
+                ? `${Math.round(clock.value).toLocaleString("en-US")} MHz`
+                : "-- MHz";
+
+            // Dedicated GPU memory sensors
+            const memoryUsed = sensors.find(
+                sensor =>
+                    ["SmallData", "Data"].includes(sensor.type) &&
+                    /GPU Memory Used|Dedicated Memory Used|VRAM Used/i
+                        .test(sensor.name) &&
+                    !/Shared|System/i.test(sensor.name)
+            );
+
+            const memoryTotal = sensors.find(
+                sensor =>
+                    ["SmallData", "Data"].includes(sensor.type) &&
+                    /GPU Memory Total|Dedicated Memory Total|VRAM Total/i
+                        .test(sensor.name) &&
+                    !/Shared|System/i.test(sensor.name)
+            );
+
+            function memoryInGB(sensor) {
+                if (!sensor) return null;
+
+                return sensor.type === "SmallData"
+                    ? sensor.value / 1024
+                    : sensor.value;
+            }
+
+            const usedGB = memoryInGB(memoryUsed);
+            const totalGB = memoryInGB(memoryTotal);
+
+            if (usedGB !== null && totalGB !== null) {
+                gpuVramElement.textContent =
+                    `${usedGB.toFixed(2)} / ${totalGB.toFixed(1)} GB`;
+            } else if (usedGB !== null) {
+                gpuVramElement.textContent =
+                    `${usedGB.toFixed(2)} GB`;
+            } else {
+                gpuVramElement.textContent = "--";
+            }
+        }
+
+
+
         if (
             !Number.isFinite(age) ||
             age > SENSOR_STALE_SECONDS ||
@@ -840,9 +1094,131 @@ async function refreshHardwareMonitor() {
 }
 
 
+
+// ==========================================
+// HARDWARE MONITOR: CARD ORDER, SHOW/HIDE, PRESETS
+// ==========================================
+function allAvailableDevices(){
+    return (latestHardwareSnapshot?.hardware || []).filter(isSupportedHardware);
+}
+function renderHardwareLayoutChoices(){
+    hardwareLayoutList.replaceChildren();
+    if(!hardwareDraft)return;
+    const devices=orderedDevices(allAvailableDevices(),hardwareDraft.order);
+    if(!devices.length){
+        const empty=document.createElement("p");
+        empty.className="pw-hardware-empty";
+        empty.textContent="Waiting for hardware devices...";
+        hardwareLayoutList.append(empty);
+        return;
+    }
+    for(let index=0;index<devices.length;index++){
+        const device=devices[index],key=deviceKey(device);
+        const row=document.createElement("div");
+        row.className="pw-hardware-device-choice";
+        row.draggable=true;
+        row.dataset.deviceKey=key;
+        const label=document.createElement("label");
+        const input=document.createElement("input");
+        input.type="checkbox";
+        input.checked=!hardwareDraft.hidden.includes(key);
+        input.addEventListener("change",()=>{
+            hardwareDraft.hidden=input.checked
+                ? hardwareDraft.hidden.filter(x=>x!==key)
+                : [...new Set([...hardwareDraft.hidden,key])];
+        });
+        const detail=document.createElement("span");
+        const title=document.createElement("strong");
+        title.textContent=device.name;
+        const category=document.createElement("small");
+        category.textContent=getHardwareCategoryLabel(device);
+        detail.append(title,category);
+        label.append(input,detail);
+        const controls=document.createElement("div");
+        controls.className="pw-hardware-order-controls";
+        for(const [direction,symbol,titleText] of [[-1,"↑","Move up"],[1,"↓","Move down"]]){
+            const button=document.createElement("button");
+            button.type="button";button.textContent=symbol;
+            button.title=titleText+" "+device.name;
+            button.setAttribute("aria-label",titleText+" "+device.name);
+            button.disabled=direction<0?index===0:index===devices.length-1;
+            button.addEventListener("click",()=>{
+                const keys=devices.map(deviceKey),swap=index+direction;
+                [keys[index],keys[swap]]=[keys[swap],keys[index]];
+                hardwareDraft.order=keys;
+                renderHardwareLayoutChoices();
+            });
+            controls.append(button);
+        }
+        row.addEventListener("dragstart",event=>{
+            if(!event.dataTransfer)return;
+            event.dataTransfer.setData("text/plain",key);
+            event.dataTransfer.effectAllowed="move";
+        });
+        row.addEventListener("dragover",event=>{
+            event.preventDefault();
+            if(event.dataTransfer)event.dataTransfer.dropEffect="move";
+        });
+        row.addEventListener("drop",event=>{
+            event.preventDefault();
+            const dragged=event.dataTransfer?.getData("text/plain");
+            if(!dragged || dragged===key || !devices.some(d=>deviceKey(d)===dragged))return;
+            const keys=devices.map(deviceKey).filter(k=>k!==dragged);
+            keys.splice(keys.indexOf(key),0,dragged);
+            hardwareDraft.order=keys;
+            renderHardwareLayoutChoices();
+        });
+        row.append(label,controls);
+        hardwareLayoutList.append(row);
+    }
+}
+function closeHardwareLayout(){
+    hardwareDraft=null;
+    if(hardwareLayoutDialog.open)hardwareLayoutDialog.close();
+}
+document.getElementById("pwHardwareLayoutOpen").addEventListener("click",()=>{
+    hardwareDraft={
+        order:[...hardwareLayout.order],
+        hidden:[...hardwareLayout.hidden]
+    };
+    renderHardwareLayoutChoices();
+    hardwareLayoutDialog.showModal();
+});
+document.getElementById("pwHardwareLayoutClose").addEventListener("click",closeHardwareLayout);
+document.getElementById("pwHardwareCancel").addEventListener("click",closeHardwareLayout);
+hardwareLayoutDialog.addEventListener("close",()=>{hardwareDraft=null;});
+document.getElementById("pwHardwareBasic").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    const available=orderedDevices(allAvailableDevices(),[]);
+    // Four principal monitors. Sensor-by-sensor customization remains intact.
+    hardwareDraft.order=available.map(deviceKey);
+    hardwareDraft.hidden=available
+        .filter(d=>!["Cpu","Memory","Storage"].includes(d.category)
+            && !(d.category||"").startsWith("Gpu"))
+        .map(deviceKey);
+    renderHardwareLayoutChoices();
+});
+document.getElementById("pwHardwareReset").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    hardwareDraft={order:[],hidden:[]};
+    renderHardwareLayoutChoices();
+});
+document.getElementById("pwHardwareApply").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    hardwareLayout={
+        order:[...hardwareDraft.order],
+        hidden:[...hardwareDraft.hidden]
+    };
+    saveHardwareLayout();
+    hardwareLayoutSignature=null;
+    renderHardwareDashboard();
+    closeHardwareLayout();
+});
+
 // ==========================================
 // START
 // ==========================================
 
+loadHardwareLayout();
 loadSensorPreferences();
 refreshHardwareMonitor();

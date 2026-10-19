@@ -1,0 +1,973 @@
+/* Free-size, re-orderable mini widgets — PulseWatch v0.3 */
+.pw-customize-launch {padding:10px 12px;border:1px solid #31516b;border-radius:9px;background:#142638;color:#e0effb;font-size:12px;cursor:pointer;}
+.pw-customize-launch:hover {border-color:#39cfff;}
+.pw-mini-region[hidden],.pw3-gpu-content[hidden] {display:none!important;}
+.pw3-cpu-card[data-view="widgets"] .pw3-cpu-stats,
+.pw3-gpu-card[data-view="widgets"] .pw3-gpu-content {display:none!important;}
+.pw-mini-region {position:relative;display:flex;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;gap:12px;min-width:0;width:100%;padding-bottom:15px;}
+.pw3-cpu-card[data-view="widgets"] .pw-mini-region {--mini-accent:#ff9e45;}
+.pw3-gpu-card[data-view="widgets"] .pw-mini-region {--mini-accent:#39cfff;}
+@media(min-width:1101px) {
+ .overview-section .dashboard>.pw3-cpu-card[data-view="widgets"] {grid-column:span var(--pw3-cpu-span,2);}
+ .overview-section .dashboard>.pw3-gpu-card[data-view="widgets"] {grid-column:span var(--pw3-gpu-span,2);}
+}
+@media(max-width:1100px) {
+ .overview-section .dashboard>.pw3-cpu-card[data-view="widgets"],
+ .overview-section .dashboard>.pw3-gpu-card[data-view="widgets"] {grid-column:1/-1;}
+}
+.pw-mini-widget {box-sizing:border-box;position:relative;display:flex;flex-direction:column;flex:0 0 auto;min-width:185px;min-height:155px;max-width:100%;padding:10px 11px 24px;background:#0b131d;border:1px solid #304153;border-radius:10px;overflow:hidden;user-select:none;}
+.pw-mini-widget:hover {border-color:var(--mini-accent);}
+.pw-mini-widget.is-dragging {opacity:.55;}
+.pw-mini-header {display:flex;gap:6px;align-items:start;}
+.pw-mini-grip {font-size:18px;color:#8495a5;cursor:grab;line-height:1;}
+.pw-mini-title {display:flex;flex:1;flex-direction:column;min-width:0;gap:3px;}
+.pw-mini-title strong {font-size:12px;color:#f1f6fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pw-mini-title small {font-size:10px;color:#8499ad;}
+.pw-mini-buttons {display:flex;gap:4px;}
+.pw-mini-mode,.pw-mini-hide {background:#142435;border:1px solid #32455a;color:#c0d2e0;border-radius:6px;padding:3px 5px;cursor:pointer;font-size:10px;}
+.pw-mini-hide {font-size:14px;line-height:1;}
+.pw-mini-mode:hover,.pw-mini-hide:hover {border-color:var(--mini-accent);}
+.pw-mini-stat {display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 0 3px;}
+.pw-mini-value {font-size:20px;color:var(--mini-accent);font-variant-numeric:tabular-nums;}
+.pw-mini-extrema {color:#92a5b5;font-size:10px;}
+.pw-mini-graph {flex:1;min-height:35px;}
+.pw-mini-graph svg {width:100%;height:100%;display:block;}
+.pw-mini-line {fill:none;stroke:var(--mini-accent);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;}
+.pw-mini-area {fill:var(--mini-accent);opacity:.11;}
+.pw-mini-gauge {--pw-mini-angle:0deg;flex:1;min-height:0;display:grid;place-items:center;}
+.pw-mini-ring {width:min(122px,85%);aspect-ratio:1;display:grid;place-items:center;position:relative;border-radius:50%;background:conic-gradient(var(--mini-accent) 0deg var(--pw-mini-angle),#273746 var(--pw-mini-angle) 360deg);}
+.pw-mini-ring::after {content:"";position:absolute;inset:12%;background:#0b131d;border-radius:50%;}
+.pw-mini-gauge-value {position:relative;z-index:1;color:#eff8ff;font-size:15px;}
+.pw-mini-big-value {flex:1;display:grid;place-items:center;font-size:clamp(20px,2vw,34px);font-weight:700;color:var(--mini-accent);}
+.pw-mini-graph[hidden],.pw-mini-stat[hidden],.pw-mini-gauge[hidden],.pw-mini-big-value[hidden] {display:none!important;}
+.pw-mini-corner {position:absolute;right:3px;bottom:3px;width:26px;height:26px;background:transparent;border:0;color:#92a7b9;font-size:20px;cursor:nwse-resize!important;touch-action:none;}
+.pw-mini-corner:hover,.pw-mini-corner.is-resizing {color:var(--mini-accent);}
+.pw-mini-empty {padding:18px;color:#91a5bb;font-size:12px;}
+.pw3-cpu-card.pw3-expanded[data-view="widgets"] .pw-mini-region,
+.pw3-gpu-card.pw3-expanded[data-view="widgets"] .pw-mini-region {overflow:auto;min-height:0;flex:1;}
+.pw-customize-dialog {width:min(790px,calc(100vw - 30px));max-height:min(760px,calc(100vh - 30px));padding:0;color:#e7f1fa;background:#101924;border:1px solid #405669;border-radius:14px;box-shadow:0 35px 95px #000a;}
+.pw-customize-dialog::backdrop {background:#000c;}
+.pw-customize-heading {display:flex;justify-content:space-between;gap:14px;padding:20px 24px;border-bottom:1px solid #304051;}
+.pw-customize-heading h2 {margin:0;font-size:20px;}
+.pw-customize-heading p {margin:6px 0 0;font-size:12px;color:#91a7bc;}
+#pwCustomizeClose {background:transparent;color:#b4c4d4;font-size:25px;border:0;cursor:pointer;}
+.pw-customize-body {display:grid;grid-template-columns:150px minmax(0,1fr);min-height:280px;}
+.pw-customize-nav {display:flex;flex-direction:column;gap:7px;padding:16px 10px;border-right:1px solid #304051;}
+.pw-customize-nav button {text-align:left;background:transparent;color:#afc0d1;border:0;border-radius:8px;padding:12px;cursor:pointer;}
+.pw-customize-nav button.active {background:#15446b;color:#fff;}
+.pw-customize-main {padding:18px;min-width:0;}
+#pwCustomizeSearch {box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #364e64;border-radius:8px;color:#e7f5ff;background:#101f2d;margin-bottom:12px;}
+.pw-customize-list {max-height:min(425px,48vh);overflow:auto;display:flex;flex-direction:column;gap:5px;}
+.pw-customize-row {display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #2b4154;border-radius:7px;background:#152130;cursor:pointer;}
+.pw-customize-row:hover {border-color:#3fa3ce;}
+.pw-customize-row input {width:16px;height:16px;accent-color:#39cfff;flex-shrink:0;}
+.pw-customize-details {display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere;}
+.pw-customize-details strong {font-size:12px;}
+.pw-customize-details small {color:#91a6b9;font-size:10px;}
+.pw-customize-empty {color:#9eafbf;font-size:13px;}
+.pw-customize-footer {display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid #304051;}
+.pw-customize-footer>div {display:flex;gap:8px;}
+.pw-customize-footer button {border-radius:7px;border:1px solid #3b566d;background:#1a2b3b;color:#d6e7f6;cursor:pointer;padding:9px 14px;}
+#pwCustomizeApply {background:#39cfff;color:#091721;border-color:#39cfff;font-weight:700;}
+@media(max-width:700px) {.pw-customize-body {grid-template-columns:1fr;}.pw-customize-nav {flex-direction:row;border-right:0;border-bottom:1px solid #304051;}.pw-customize-footer {flex-wrap:wrap;}}
+
+/* Drag previews for individually sized CPU and GPU sensor panels */
+.pw-mini-grip {
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+    border-radius: 4px;
+}
+.pw-mini-grip.is-moving { cursor: grabbing; color: var(--mini-accent); }
+.pw-mini-grip:focus-visible { outline: 2px solid var(--mini-accent); outline-offset: 3px; }
+.pw-mini-widget.is-dragging { opacity: .72; }
+.pw-mini-widget.pw-mini-drop-before {
+    box-shadow: inset 4px 0 0 var(--mini-accent);
+    border-color: var(--mini-accent);
+}
+.pw-mini-widget.pw-mini-drop-after {
+    box-shadow: inset -4px 0 0 var(--mini-accent);
+    border-color: var(--mini-accent);
+}
+.pw-mini-region.pw-mini-drop-end {
+    outline: 1px dashed var(--mini-accent);
+    outline-offset: 3px;
+    border-radius: 9px;
+}
+
+/* PulseWatch v0.3 — optional pixel-positioned widgets */
+.pw-mini-layout-controls {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: -5px 0 15px;
+    font-size: 11px;
+    color: #9fb2c6;
+}
+.pw3-cpu-card[data-view="widgets"] .pw-mini-layout-controls,
+.pw3-gpu-card[data-view="widgets"] .pw-mini-layout-controls {
+    display: flex;
+}
+.pw-mini-layout-controls > span { margin-right: 5px; font-weight: 650; }
+.pw-mini-layout-controls button {
+    padding: 7px 11px;
+    border: 1px solid #344a60;
+    border-radius: 7px;
+    background: #122131;
+    color: #bdcddb;
+    cursor: pointer;
+    font-weight: 650;
+    font-size: 11px;
+}
+.pw-mini-layout-controls button.active {
+    color: #08131c;
+    background: #3dbff7;
+    border-color: #3dbff7;
+}
+.pw3-cpu-card .pw-mini-layout-controls button.active {
+    background: #ff9e45;
+    border-color: #ff9e45;
+}
+.pw-mini-layout-controls small { margin-left: 7px; color: #8ca1b6; }
+.pw-mini-region.pw-mini-free {
+    display: block;
+    position: relative;
+    min-height: 240px;
+    padding: 0;
+}
+.pw-mini-region.pw-mini-free > .pw-mini-widget {
+    position: absolute;
+    margin: 0;
+    transition: none;
+}
+.pw-mini-free .pw-mini-widget.is-dragging {
+    z-index: 5;
+    border-color: var(--mini-accent);
+    box-shadow: 0 12px 26px rgba(0,0,0,.28);
+    opacity: 0.95;
+}
+.pw-mini-region.pw-mini-free > .pw-mini-empty {
+    position: relative;
+    padding: 18px;
+}
+
+/* Shared customizable RAM / Storage / Network cards */
+.pw-extra-card {
+    --pw-extra-accent:#34d399;
+    --mini-accent:var(--pw-extra-accent);
+    position:relative;
+    grid-column:span 2;
+    min-width:0;
+    padding:24px;
+    background:linear-gradient(145deg,#141b25,#0c111a);
+    border:1px solid #35404c;
+    border-radius:16px;
+    overflow:hidden;
+}
+.pw-ram-card {--pw-extra-accent:#34d399;}
+.pw-storage-card {--pw-extra-accent:#f3b84c;}
+.pw-network-card {--pw-extra-accent:#b69bff;grid-column:1/-1;}
+.pw-extra-card:hover {border-color:var(--pw-extra-accent);}
+.pw-extra-header {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.pw-extra-eyebrow {display:block;color:var(--pw-extra-accent);font-size:10px;font-weight:750;letter-spacing:1.7px;margin-bottom:6px;}
+.pw-extra-heading h3 {color:#fff;font-size:22px;font-weight:700;margin:0;}
+.pw-extra-heading p {color:#9bacc0;font-size:12px;margin:6px 0 0;}
+.pw-extra-stats {display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.pw-extra-stats span {display:flex;flex-direction:column;gap:6px;padding:11px 15px;color:#a5b6c7;background:rgba(8,13,20,.5);border:1px solid #2b3949;border-radius:9px;font-size:12px;}
+.pw-extra-stats strong {color:var(--pw-extra-accent);font-size:23px;font-variant-numeric:tabular-nums;}
+.pw-extra-card .pw-mini-layout-controls {display:flex;margin:0 0 16px;}
+.pw-extra-card .pw-mini-layout-controls button.active {background:var(--pw-extra-accent);border-color:var(--pw-extra-accent);color:#07141e;}
+.pw-extra-card .pw-mini-widget {--mini-accent:var(--pw-extra-accent);}
+.pw-extra-card .pw-mini-region {margin-bottom:12px;}
+@media(max-width:1100px) {
+    .overview-section .dashboard>.pw-extra-card {grid-column:1/-1;}
+}
+@media(max-width:700px) {
+    .pw-extra-card {padding:18px;}
+    .pw-extra-stats strong {font-size:19px;}
+}
+
+
+/* v0.3 Dashboard refinements: clear actions, focus indicators,
+   visual hierarchy, reset confirmation and responsive modal. */
+.pw-mini-widget {
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.pw-mini-widget:hover {
+    box-shadow: 0 7px 20px rgba(0,0,0,.2);
+}
+.pw-mini-widget.is-dragging,
+.pw-mini-widget .pw-mini-corner.is-resizing {
+    transition: none;
+}
+.pw-mini-widget .pw-mini-header {
+    margin-bottom: 4px;
+}
+.pw-mini-widget .pw-mini-grip:hover {
+    color: var(--mini-accent);
+}
+.pw-mini-widget .pw-mini-mode,
+.pw-mini-widget .pw-mini-hide {
+    min-height: 24px;
+}
+.pw-mini-layout-controls {
+    gap: 8px;
+}
+.pw-mini-layout-controls .pw-mini-reset {
+    margin-left: auto;
+}
+.pw-mini-layout-controls .pw-mini-reset,
+.pw-customize-footer .pw-mini-reset {
+    color: #ffcdac;
+    background: rgba(130,65,37,.12);
+    border-color: #76513f;
+}
+.pw-mini-layout-controls .pw-mini-reset:hover,
+.pw-customize-footer .pw-mini-reset:hover {
+    background: rgba(170,78,40,.22);
+    border-color: #e89b62;
+    color: #ffdcc5;
+}
+.pw-customize-footer-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.pw-mini-grip:focus-visible,
+.pw-mini-mode:focus-visible,
+.pw-mini-hide:focus-visible,
+.pw-mini-corner:focus-visible,
+.pw-mini-layout-controls button:focus-visible,
+.pw-customize-dialog button:focus-visible,
+.pw-reset-dialog button:focus-visible,
+.pw-customize-launch:focus-visible {
+    outline: 2px solid #7bd7fb;
+    outline-offset: 3px;
+}
+.pw-customize-nav button.active {
+    background: linear-gradient(105deg, #16466e, #1b3449);
+    border-left: 3px solid #39cfff;
+}
+.pw-customize-row:has(input:checked) {
+    border-color: #315f76;
+    background: #172939;
+}
+.pw-customize-footer {
+    flex-wrap: wrap;
+}
+.pw-reset-dialog {
+    padding: 26px;
+    box-sizing: border-box;
+    width: min(440px, calc(100vw - 28px));
+    border-radius: 15px;
+    border: 1px solid #40556a;
+    background: #101b28;
+    color: #e9f2fc;
+    box-shadow: 0 30px 100px rgba(0,0,0,.6);
+}
+.pw-reset-dialog::backdrop {
+    background: rgba(0,0,0,.76);
+}
+.pw-reset-dialog h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+.pw-reset-dialog p {
+    margin: 0 0 12px;
+    color: #bdcbd9;
+    line-height: 1.6;
+    font-size: 13px;
+}
+.pw-reset-dialog .pw-reset-preserved {
+    color: #82c8af;
+    font-size: 12px;
+}
+.pw-reset-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+.pw-reset-actions button {
+    padding: 10px 15px;
+    border: 1px solid #40556b;
+    border-radius: 8px;
+    background: #19293a;
+    color: #e3ecf5;
+    cursor: pointer;
+}
+#pwLayoutResetConfirm {
+    color: #0e1821;
+    border-color: #ffb17e;
+    background: #ffb17e;
+    font-weight: 700;
+}
+#pwLayoutResetConfirm:hover {
+    background: #ffcc9e;
+}
+@media (max-width: 700px) {
+    .pw-mini-layout-controls .pw-mini-reset {
+        margin-left: 0;
+    }
+    .pw-customize-footer {
+        align-items: flex-start;
+    }
+    .pw-customize-footer-left {
+        width: 100%;
+    }
+}
+
+
+/* Explicit factory reset: distinct from the layout-only action. */
+.pw-mini-layout-controls .pw-mini-defaults,
+.pw-customize-footer .pw-mini-defaults {
+    color: #d0e7f6;
+    background: rgba(34,73,100,.2);
+    border-color: #416079;
+}
+.pw-mini-layout-controls .pw-mini-defaults:hover,
+.pw-customize-footer .pw-mini-defaults:hover {
+    background: #21445c;
+    border-color: #5c9ac0;
+    color: #f1faff;
+}
+.pw-customize-footer-left button {
+    white-space: nowrap;
+}
+.pw-reset-dialog .pw-reset-preserved {
+    color: #82c8af;
+}
+
+/* ========= v0.3 — continuous parent-card layout ========= */
+.overview-section .dashboard {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:18px;
+}
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+    box-sizing:border-box;
+    flex:0 0 auto;
+    --pw-default-width:calc(50% - 9px);
+    width:var(--pw-parent-width,var(--pw-default-width));
+    min-width:min(310px,100%);
+    max-width:100%;
+    height:auto;
+    align-self:flex-start;
+    overflow:auto;
+    scrollbar-width:thin;
+}
+.overview-section .dashboard > .pw3-cpu-card[data-view="graph"],
+.overview-section .dashboard > .pw3-gpu-card[data-view="graph"],
+.overview-section .dashboard > .pw-network-card {
+    --pw-default-width:100%;
+}
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card).pw-parent-is-resizing {
+    transition:none;
+    outline:1px solid var(--mini-accent,#3ebcf4);
+}
+.pw-extra-card .pw3-resize-handle {
+    display:block;
+    position:absolute;
+    right:7px;
+    bottom:7px;
+    z-index:2;
+    cursor:nwse-resize;
+}
+[data-pw-parent-resize] {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:nwse-resize;
+    touch-action:none;
+    user-select:none;
+}
+[data-pw-parent-resize]:hover,
+[data-pw-parent-resize].is-resizing {
+    color:var(--pw-extra-accent,#4dcaf4);
+    border-color:var(--pw-extra-accent,#4dcaf4);
+}
+@media(max-width:700px) {
+    .overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+        width:100% !important;
+        height:auto !important;
+        min-width:0;
+    }
+    [data-pw-parent-resize] {display:none!important;}
+}
+
+/* Real non-widget display modes: independent gauge/graph/compact. */
+.pw-extra-card .pw-extra-header {
+    flex-wrap:wrap;
+    align-items:center;
+}
+.pw-extra-view-switch {
+    flex:0 1 auto;
+    margin-left:auto;
+    display:flex;
+    max-width:100%;
+    flex-wrap:wrap;
+}
+.pw-extra-card .pw-extra-view-switch button.active {
+    background:var(--pw-extra-accent);
+    color:#091722;
+}
+.pw-extra-card:not([data-view="widgets"]) .pw-mini-layout-controls,
+.pw-extra-card:not([data-view="widgets"]) .pw-mini-region {
+    display:none!important;
+}
+.pw-extra-card[data-view="compact"] .pw-extra-heading p,
+.pw-extra-card[data-view="compact"] .pw-extra-stats {
+    display:none;
+}
+.pw-extra-primary {
+    min-height:215px;
+    border:1px solid #33495d;
+    border-radius:12px;
+    background:rgba(8,15,24,.55);
+    padding:18px;
+    margin:12px 0 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:9px;
+}
+.pw-extra-primary[hidden] {display:none!important;}
+.pw-extra-primary-label {color:#9db4c8;font-size:12px;}
+.pw-extra-primary-value {
+    color:var(--pw-extra-accent);
+    font-size:clamp(23px,3vw,36px);
+    font-variant-numeric:tabular-nums;
+}
+.pw-extra-primary svg {display:none;width:100%;height:145px;min-height:90px;}
+.pw-extra-primary-line {
+    fill:none;
+    stroke:var(--pw-extra-accent);
+    stroke-width:2.3;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+}
+.pw-extra-primary-ring {
+    display:none;
+    place-items:center;
+    position:relative;
+    margin:10px auto 15px;
+    width:min(166px,90%);
+    aspect-ratio:1;
+    border-radius:50%;
+    background:conic-gradient(var(--pw-extra-accent) 0deg var(--pw-primary-angle,0deg),
+                              #2b4053 var(--pw-primary-angle,0deg) 360deg);
+}
+.pw-extra-primary-ring::after {
+    content:"";
+    position:absolute;inset:13%;border-radius:50%;
+    background:#101a26;
+}
+.pw-extra-primary-ring strong {
+    position:relative;z-index:1;color:#f0f7ff;font-size:17px;
+}
+.pw-extra-primary-details {
+    display:grid;
+    width:100%;
+    grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));
+    gap:9px;
+}
+.pw-extra-primary-reading {
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    background:#122131;
+    border:1px solid #30465a;
+    padding:10px;
+    border-radius:8px;
+    font-size:11px;
+}
+.pw-extra-primary-reading span {color:#a7bacb;}
+.pw-extra-primary-reading strong {color:#e4f1fc;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.pw-extra-mode-graph svg {display:block;}
+.pw-extra-mode-gauge .pw-extra-primary-ring {display:grid;}
+.pw-extra-mode-gauge .pw-extra-primary-value {display:none;}
+.pw-extra-mode-compact {min-height:0;margin:8px 0 12px;padding:12px;}
+.pw-extra-mode-compact .pw-extra-primary-label,
+.pw-extra-mode-compact .pw-extra-primary-value,
+.pw-extra-mode-compact svg,
+.pw-extra-mode-compact .pw-extra-primary-ring {display:none;}
+.pw-motherboard-card {--pw-extra-accent:#ec8dce;}
+.pw-motherboard-card .pw-mini-widget {--mini-accent:#ec8dce;}
+
+/* Hardware Monitor: masonry-style columns instead of row-height gaps. */
+.hardware-grid {
+    display:block;
+    columns:2;
+    column-gap:16px;
+}
+.hardware-grid > .hardware-device-card {
+    display:inline-block;
+    vertical-align:top;
+    width:100%;
+    box-sizing:border-box;
+    break-inside:avoid;
+    margin:0 0 16px;
+}
+.hardware-device-header {padding:17px 18px;gap:5px;}
+.hardware-device-groups {padding:10px;}
+.hardware-reading-group {margin-bottom:7px;}
+.hardware-group-heading {padding:10px 13px;}
+.hardware-readings {max-height:280px;}
+@media(min-width:1900px) { .hardware-grid {columns:3;} }
+@media(max-width:1250px) { .hardware-grid {columns:1;} }
+
+
+/* v0.3 — compact overview menus, less explanatory copy */
+.pw3-cpu-title > p,
+.pw-extra-heading > p,
+.pw3-gpu-header > div > p:not(#overviewGpuName) {
+    display:none;
+}
+.pw3-cpu-header,.pw3-gpu-header,.pw-extra-header {
+    position:relative;
+    flex-wrap:wrap;
+}
+.pw3-cpu-actions,.pw3-gpu-actions {
+    flex-wrap:wrap;
+    align-items:center;
+}
+.pw-overview-options {
+    position:relative;
+    z-index:12;
+    flex:0 0 auto;
+    margin-left:3px;
+}
+.pw-overview-options[open] {z-index:90;}
+.pw-overview-options > summary {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;height:32px;
+    font-size:24px;
+    line-height:1;
+    cursor:pointer;
+    border-radius:8px;
+    color:#d6e5f3;
+    border:1px solid #385066;
+    background:#152638;
+    list-style:none;
+}
+.pw-overview-options > summary::-webkit-details-marker{display:none;}
+.pw-overview-options[open] > summary,
+.pw-overview-options > summary:hover {
+    background:#28415a;border-color:#6ca6ca;
+}
+.pw-overview-popup {
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    width:205px;
+    max-width:calc(100vw - 44px);
+    padding:12px;
+    border:1px solid #3a536a;
+    border-radius:10px;
+    box-shadow:0 16px 40px #0009;
+    background:#111d2b;
+    z-index:91;
+}
+.pw-options-title {
+    display:block;
+    color:#a8c1d5;
+    font-size:11px;
+    font-weight:700;
+    margin-bottom:8px;
+    letter-spacing:.25px;
+}
+.pw-overview-options .pw-mini-layout-controls,
+.pw3-cpu-card .pw-overview-options .pw-mini-layout-controls,
+.pw3-gpu-card .pw-overview-options .pw-mini-layout-controls,
+.pw-extra-card .pw-overview-options .pw-mini-layout-controls {
+    display:flex!important;
+    flex-direction:column;
+    align-items:stretch;
+    margin:0;
+    padding:0;
+    gap:6px;
+}
+.pw-overview-options .pw-mini-layout-controls button {
+    width:100%;
+    text-align:left;
+    margin:0;
+    min-height:33px;
+    padding:8px 10px;
+}
+.pw-overview-options .pw-mini-layout-controls button.active {
+    color:#07141e;
+}
+.pw-overview-options > summary:focus-visible {
+    outline:2px solid #71c5ff;outline-offset:3px;
+}
+/* Hardware Monitor: compact layout editor */
+.pw-hardware-dialog {
+    box-sizing:border-box;
+    padding:0;
+    width:min(610px,calc(100vw - 30px));
+    max-height:min(760px,calc(100vh - 32px));
+    border:1px solid #3a5268;
+    border-radius:14px;
+    background:#101b28;
+    color:#e7f3ff;
+    box-shadow:0 30px 100px #000a;
+}
+.pw-hardware-dialog::backdrop{background:#000b;}
+.pw-hardware-dialog-header {
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:20px 22px 15px;
+    border-bottom:1px solid #304457;
+}
+.pw-hardware-dialog-header h2{font-size:19px;margin:0;}
+.pw-hardware-dialog-header p{color:#8faac0;font-size:12px;margin:7px 0 0;}
+#pwHardwareLayoutClose{
+    align-self:flex-start;border:0;background:transparent;
+    color:#a7bbc9;font-size:24px;cursor:pointer;
+}
+.pw-hardware-layout-list {
+    padding:15px 20px;
+    max-height:420px;
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+.pw-hardware-device-choice {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:space-between;
+    padding:11px 12px;
+    background:#142535;
+    border:1px solid #30485d;
+    border-radius:8px;
+    cursor:grab;
+}
+.pw-hardware-device-choice:hover{border-color:#5182a4;}
+.pw-hardware-device-choice label{
+    display:flex;align-items:center;gap:12px;
+    flex:1;min-width:0;cursor:pointer;
+}
+.pw-hardware-device-choice input{width:17px;height:17px;accent-color:#39cfff;flex-shrink:0;}
+.pw-hardware-device-choice label span{
+    display:flex;flex-direction:column;gap:4px;min-width:0;
+}
+.pw-hardware-device-choice strong{
+    color:#f2f8ff;font-size:12px;overflow-wrap:anywhere;
+}
+.pw-hardware-device-choice small{color:#8ea9c0;font-size:10px;}
+.pw-hardware-order-controls{display:flex;gap:6px;}
+.pw-hardware-order-controls button{
+    width:31px;height:31px;cursor:pointer;
+    border:1px solid #40566b;background:#203448;
+    border-radius:6px;color:#e3effa;
+}
+.pw-hardware-order-controls button:disabled{opacity:.3;cursor:default;}
+.pw-hardware-dialog-footer {
+    display:flex;justify-content:space-between;
+    align-items:center;flex-wrap:wrap;gap:10px;
+    padding:15px 20px;
+    border-top:1px solid #304457;
+}
+.pw-hardware-dialog-footer > div {display:flex;gap:8px;}
+.pw-hardware-dialog-footer button {
+    padding:9px 13px;border-radius:7px;
+    border:1px solid #486078;background:#192d41;
+    color:#d6e9fa;cursor:pointer;
+}
+.pw-hardware-dialog-footer .primary {
+    background:#39cfff;border-color:#39cfff;
+    color:#081720;font-weight:750;
+}
+.pw-hardware-empty{color:#a3bace;padding:10px;font-size:12px;}
+
+/* Sidebar: icon-only collapsed navigation, remembered between launches */
+.app-layout.pw-sidebar-collapsed {
+    grid-template-columns:76px minmax(0,1fr);
+}
+/* Keep navigation on screen while the main dashboard scrolls.
+   sticky also establishes the positioning context for the toggle. */
+.sidebar {
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    max-height:100vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+}
+.pw-sidebar-toggle {
+    position:absolute;
+    top:20px;right:9px;
+    width:27px;height:27px;
+    display:grid;place-items:center;
+    border-radius:7px;
+    border:1px solid #35526b;
+    background:#152839;color:#e7f4ff;
+    font-size:20px;cursor:pointer;
+    z-index:3;
+}
+.pw-sidebar-toggle:hover{background:#244663;}
+.pw-sidebar-collapsed .sidebar {padding-left:8px;padding-right:8px;}
+.pw-sidebar-collapsed .brand {padding:0;justify-content:center;margin-top:29px;}
+.pw-sidebar-collapsed .brand-info,
+.pw-sidebar-collapsed .sidebar-label,
+.pw-sidebar-collapsed .sidebar-bottom,
+.pw-sidebar-collapsed .pw-nav-label {display:none;}
+.pw-sidebar-collapsed .sidebar-nav .nav-item {
+    justify-content:center;padding:11px 0;
+}
+.pw-sidebar-collapsed .sidebar-nav .nav-icon {
+    flex:0 0 auto;width:24px;
+}
+@media(max-width:768px){
+    /* Mobile uses normal page flow instead of a viewport-height sidebar. */
+    .sidebar {
+        position:relative;
+        top:auto;
+        max-height:none;
+        height:auto;
+        overflow:visible;
+    }
+    .app-layout.pw-sidebar-collapsed {grid-template-columns:1fr;}
+    .pw-sidebar-collapsed .sidebar {height:auto;min-height:75px;}
+    .pw-sidebar-collapsed .sidebar-section {display:none;}
+    .pw-sidebar-collapsed .brand {margin:0;justify-content:flex-start;}
+}
+
+
+/* ==========================================
+   v0.3 Desktop polish — reliable free resizing
+   Keep the title and controls visible when a card is short.
+   Scroll only its readings (never the whole card).
+   ========================================== */
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    isolation:isolate;
+}
+.overview-section .dashboard > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card)
+:is(.pw3-cpu-header,.pw3-gpu-header,.pw-extra-header) {
+    flex:0 0 auto;
+    position:relative;
+    z-index:12;
+    min-width:0;
+    margin-bottom:12px;
+}
+.overview-section .dashboard .pw-overview-content {
+    flex:1 1 auto;
+    min-width:0;
+    min-height:0;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:#344b60 transparent;
+    padding-right:2px;
+    padding-bottom:7px;
+}
+/* No vertical scrollbar unless a card has been made too short.
+   Always prevent sideways scrolling, regardless of chosen mode. */
+.overview-section .dashboard .pw-overview-content::-webkit-scrollbar {
+    width:5px;
+    height:0;
+}
+.overview-section .dashboard .pw-overview-content::-webkit-scrollbar-thumb {
+    background:#344b60;
+    border-radius:8px;
+}
+.overview-section .dashboard .pw-overview-content :is(
+    .pw3-gpu-content,.pw3-cpu-stats,.pw3-gpu-details,
+    .pw-extra-stats,.pw-extra-primary,.pw-mini-region
+) {
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+}
+.overview-section .dashboard .pw3-gpu-content {
+    grid-template-columns:minmax(0,0.85fr) minmax(0,1fr);
+    gap:clamp(8px,1.4vw,20px);
+}
+.overview-section .dashboard .pw3-gpu-gauge {
+    width:min(100%,205px);
+}
+.overview-section .dashboard .pw3-gpu-detail {
+    min-width:0;
+    overflow-wrap:anywhere;
+}
+.overview-section .dashboard .pw3-view-switch {
+    flex:0 1 auto;
+    max-width:100%;
+    flex-wrap:wrap;
+    min-width:0;
+    gap:2px;
+}
+.overview-section .dashboard .pw3-view-switch button {
+    padding:7px 10px;
+    font-size:11px;
+}
+.overview-section .dashboard .pw3-cpu-actions,
+.overview-section .dashboard .pw3-gpu-actions {
+    min-width:0;
+    max-width:100%;
+}
+.overview-section .dashboard .pw-extra-header {
+    row-gap:9px;
+}
+.overview-section .dashboard .pw-extra-card .pw-extra-stats {
+    margin-bottom:12px;
+}
+.overview-section .dashboard .pw-mini-widget {
+    min-width:min(185px,100%);
+}
+/* Respond to the actual card-content width, not the monitor size.
+   A narrow GPU card switches to stacked metrics on its own. */
+.overview-section .dashboard .pw-overview-content {
+    container:pw-card-body / inline-size;
+}
+@container pw-card-body (max-width:470px) {
+    .pw3-gpu-card .pw3-gpu-content {
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+    .pw3-gpu-card .pw3-gpu-gauge {
+        max-width:132px;
+    }
+    .pw3-gpu-card .pw3-gpu-details {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(min(125px,100%),1fr));
+        gap:7px;
+    }
+    .pw3-gpu-card .pw3-gpu-detail {
+        padding:9px 11px;
+    }
+    .pw3-cpu-card .pw3-cpu-stats {
+        grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));
+        gap:8px;
+    }
+    .pw3-cpu-card .pw3-cpu-stat {
+        padding:9px 11px;
+    }
+}
+@container pw-card-body (max-width:310px) {
+    .pw3-gpu-card .pw3-gpu-details {
+        grid-template-columns:1fr;
+    }
+    .pw-extra-card .pw-extra-stats {
+        gap:6px;
+    }
+}
+/* Keep the menu in the header, above the scrollable content. */
+.overview-section .dashboard .pw-overview-options[open] {z-index:30;}
+.overview-section .dashboard .pw-overview-popup {z-index:31;}
+@media(max-width:700px){
+    .overview-section .dashboard .pw-overview-content {
+        max-height:none;
+        overflow-y:visible;
+    }
+}
+
+
+/* Allow an open actions popover to appear above neighboring flex cards.
+   Its viewport-fixed coordinates are supplied by overview-options.js. */
+.overview-section .dashboard > .pw-options-active {
+    position:relative;
+    z-index:35;
+}
+.overview-section .dashboard .pw-overview-popup {
+    box-sizing:border-box;
+    z-index:99;
+}
+/* Avoid a nested sideways scrollbar if an unusually wide graph is saved. */
+.overview-section .dashboard .pw-overview-content > * {
+    min-width:0;
+}
+
+
+/* Group extra-card display modes and the actions menu together.
+   On narrow cards, wrap the entire control group below the title,
+   never leave the ⋯ button orphaned on a separate line. */
+.pw-extra-header .pw-extra-actions {
+    display:flex;
+    flex:0 1 auto;
+    min-width:0;
+    max-width:100%;
+    margin-left:auto;
+    align-items:center;
+    gap:7px;
+}
+.pw-extra-header .pw-extra-actions > .pw-extra-view-switch {
+    flex:1 1 auto;
+    min-width:0;
+    margin-left:0;
+}
+.pw-extra-header .pw-extra-actions > .pw-overview-options {
+    flex:0 0 auto;
+    margin-left:0;
+}
+@media(max-width:700px){
+    .pw-extra-header .pw-extra-actions {
+        width:100%;
+        justify-content:flex-start;
+        margin-left:0;
+    }
+}
+
+
+/* ========= v0.3 UI polish: tight card controls ========= */
+/* Never truncate a four-way control across two rows within a narrow
+   system card. Switching modes still uses the same underlying handlers. */
+.pw-extra-compact-selector {
+    display:none;
+    flex:0 1 155px;
+    min-width:0;
+    width:145px;
+    max-width:100%;
+    min-height:34px;
+    padding:6px 26px 6px 10px;
+    border:1px solid #3c5164;
+    border-radius:8px;
+    background:#142637;
+    color:#e9f6ff;
+    font-size:12px;
+    font-weight:650;
+    cursor:pointer;
+    color-scheme:dark;
+}
+.pw-extra-compact-selector:focus-visible {
+    outline:2px solid #7bd7fb;
+    outline-offset:2px;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-extra-view-switch {
+    display:none!important;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-extra-compact-selector {
+    display:block;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions {
+    flex:0 1 auto;
+    min-width:0;
+    max-width:100%;
+    gap:7px;
+}
+.pw-extra-card.pw-extra-tight .pw-extra-actions > .pw-overview-options {
+    margin-left:0;
+}
+/* The metric ids remain in the DOM for live updates, but the visible
+   single-value summaries repeated the same readings in sensor widgets
+   (and again in Graph / Gauge). Recover that vertical space. */
+.pw-extra-card .pw-extra-stats {
+    display:none!important;
+}
+.pw-extra-card .pw-overview-content > .pw-mini-region {
+    margin-top:3px;
+}

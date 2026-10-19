@@ -41,8 +41,8 @@ def acquire_single_instance():
 
         ctypes.windll.user32.MessageBoxW(
             None,
-            "PulseWatch is already running.",
-            "PulseWatch",
+            "RigObserver is already running.",
+            "RigObserver",
             0x40
         )
 
