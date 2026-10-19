@@ -2,13 +2,13 @@
 @echo off
 setlocal
 
-title PulseWatch - System Monitor
+title RigObserver - System Monitor
 
 cd /d "%~dp0"
 
 echo.
 echo ========================================
-echo          PULSEWATCH STARTUP
+echo          RIGOBSERVER STARTUP
 echo ========================================
 echo.
 
@@ -32,14 +32,14 @@ if errorlevel 1 (
     echo Continuing with Basic Monitoring.
 )
 
-REM Start PulseWatch Dashboard
+REM Start RigObserver Dashboard
 echo.
-echo [2/2] Starting PulseWatch Dashboard...
+echo [2/2] Starting RigObserver Dashboard...
 echo.
 echo Dashboard:
 echo http://127.0.0.1:8000/dashboard
 echo.
-echo Press Ctrl+C to stop PulseWatch.
+echo Press Ctrl+C to stop RigObserver.
 echo.
 
 REM Open browser automatically when server is ready
@@ -49,5 +49,5 @@ REM Start FastAPI Server
 ".venv\Scripts\python.exe" -m uvicorn app.api:app --host 127.0.0.1 --port 8000
 
 echo.
-echo PulseWatch server stopped.
+echo RigObserver server stopped.
 pause
