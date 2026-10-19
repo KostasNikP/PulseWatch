@@ -13,6 +13,12 @@ const closeSensorSettingsButton = document.getElementById("closeSensorSettings")
 const sensorSettingsList = document.getElementById("sensorSettingsList");
 
 const SENSOR_STORAGE_KEY = "pulsewatch_hidden_sensors_v1";
+const HARDWARE_LAYOUT_KEY = "pulsewatch_hardware_card_layout_v1";
+const hardwareLayoutDialog = document.getElementById("pwHardwareLayoutDialog");
+const hardwareLayoutList = document.getElementById("pwHardwareLayoutList");
+const DEFAULT_CATEGORY_ORDER = ["Cpu","Gpu","Memory","Storage","Motherboard","SuperIO"];
+let hardwareLayout = {order:[],hidden:[]};
+let hardwareDraft = null;
 const HARDWARE_REFRESH_INTERVAL = 3000;
 const SENSOR_STALE_SECONDS = 15;
 
@@ -96,6 +102,40 @@ function loadSensorPreferences() {
         console.warn("Could not load sensor preferences:", error);
         hiddenSensors = new Set();
     }
+}
+
+function deviceKey(device) {
+    return String(device.id || device.name);
+}
+function defaultRank(device) {
+    const cat=(device.category || "").startsWith("Gpu") ? "Gpu" : device.category;
+    const index=DEFAULT_CATEGORY_ORDER.indexOf(cat);
+    return index < 0 ? 999 : index;
+}
+function orderedDevices(devices, order) {
+    const position=new Map(order.map((id,index)=>[id,index]));
+    return [...devices].sort((a,b)=>{
+        const ai=position.get(deviceKey(a)),bi=position.get(deviceKey(b));
+        if(ai!==undefined && bi!==undefined) return ai-bi;
+        if(ai!==undefined)return -1;
+        if(bi!==undefined)return 1;
+        return defaultRank(a)-defaultRank(b) || a.name.localeCompare(b.name);
+    });
+}
+function loadHardwareLayout() {
+    try {
+        const stored=JSON.parse(localStorage.getItem(HARDWARE_LAYOUT_KEY)||"null");
+        if(stored && Array.isArray(stored.order) && Array.isArray(stored.hidden)){
+            hardwareLayout={
+                order:stored.order.filter(x=>typeof x==="string"),
+                hidden:stored.hidden.filter(x=>typeof x==="string")
+            };
+        }
+    }catch(error){console.warn("Could not restore hardware card layout:",error);}
+}
+function saveHardwareLayout() {
+    try{localStorage.setItem(HARDWARE_LAYOUT_KEY,JSON.stringify(hardwareLayout));}
+    catch(error){console.warn("Could not save hardware layout:",error);}
 }
 
 function saveSensorPreferences() {
@@ -513,11 +553,11 @@ function createHardwareCard(device, sensors) {
 function renderHardwareDashboard() {
     if (!latestHardwareSnapshot) return;
 
-    const visibleDevices = (
-        latestHardwareSnapshot.hardware || []
-    )
-        .filter(isSupportedHardware)
-        .map(device => ({
+    const visibleDevices = orderedDevices(
+        (latestHardwareSnapshot.hardware || []).filter(device =>
+            isSupportedHardware(device) && !hardwareLayout.hidden.includes(deviceKey(device))
+        ), hardwareLayout.order
+    ).map(device => ({
             device,
             sensors: getValidSensors(device).filter(sensor =>
                 !hiddenSensors.has(getSensorKey(device, sensor))
@@ -1054,9 +1094,131 @@ async function refreshHardwareMonitor() {
 }
 
 
+
+// ==========================================
+// HARDWARE MONITOR: CARD ORDER, SHOW/HIDE, PRESETS
+// ==========================================
+function allAvailableDevices(){
+    return (latestHardwareSnapshot?.hardware || []).filter(isSupportedHardware);
+}
+function renderHardwareLayoutChoices(){
+    hardwareLayoutList.replaceChildren();
+    if(!hardwareDraft)return;
+    const devices=orderedDevices(allAvailableDevices(),hardwareDraft.order);
+    if(!devices.length){
+        const empty=document.createElement("p");
+        empty.className="pw-hardware-empty";
+        empty.textContent="Waiting for hardware devices...";
+        hardwareLayoutList.append(empty);
+        return;
+    }
+    for(let index=0;index<devices.length;index++){
+        const device=devices[index],key=deviceKey(device);
+        const row=document.createElement("div");
+        row.className="pw-hardware-device-choice";
+        row.draggable=true;
+        row.dataset.deviceKey=key;
+        const label=document.createElement("label");
+        const input=document.createElement("input");
+        input.type="checkbox";
+        input.checked=!hardwareDraft.hidden.includes(key);
+        input.addEventListener("change",()=>{
+            hardwareDraft.hidden=input.checked
+                ? hardwareDraft.hidden.filter(x=>x!==key)
+                : [...new Set([...hardwareDraft.hidden,key])];
+        });
+        const detail=document.createElement("span");
+        const title=document.createElement("strong");
+        title.textContent=device.name;
+        const category=document.createElement("small");
+        category.textContent=getHardwareCategoryLabel(device);
+        detail.append(title,category);
+        label.append(input,detail);
+        const controls=document.createElement("div");
+        controls.className="pw-hardware-order-controls";
+        for(const [direction,symbol,titleText] of [[-1,"↑","Move up"],[1,"↓","Move down"]]){
+            const button=document.createElement("button");
+            button.type="button";button.textContent=symbol;
+            button.title=titleText+" "+device.name;
+            button.setAttribute("aria-label",titleText+" "+device.name);
+            button.disabled=direction<0?index===0:index===devices.length-1;
+            button.addEventListener("click",()=>{
+                const keys=devices.map(deviceKey),swap=index+direction;
+                [keys[index],keys[swap]]=[keys[swap],keys[index]];
+                hardwareDraft.order=keys;
+                renderHardwareLayoutChoices();
+            });
+            controls.append(button);
+        }
+        row.addEventListener("dragstart",event=>{
+            if(!event.dataTransfer)return;
+            event.dataTransfer.setData("text/plain",key);
+            event.dataTransfer.effectAllowed="move";
+        });
+        row.addEventListener("dragover",event=>{
+            event.preventDefault();
+            if(event.dataTransfer)event.dataTransfer.dropEffect="move";
+        });
+        row.addEventListener("drop",event=>{
+            event.preventDefault();
+            const dragged=event.dataTransfer?.getData("text/plain");
+            if(!dragged || dragged===key || !devices.some(d=>deviceKey(d)===dragged))return;
+            const keys=devices.map(deviceKey).filter(k=>k!==dragged);
+            keys.splice(keys.indexOf(key),0,dragged);
+            hardwareDraft.order=keys;
+            renderHardwareLayoutChoices();
+        });
+        row.append(label,controls);
+        hardwareLayoutList.append(row);
+    }
+}
+function closeHardwareLayout(){
+    hardwareDraft=null;
+    if(hardwareLayoutDialog.open)hardwareLayoutDialog.close();
+}
+document.getElementById("pwHardwareLayoutOpen").addEventListener("click",()=>{
+    hardwareDraft={
+        order:[...hardwareLayout.order],
+        hidden:[...hardwareLayout.hidden]
+    };
+    renderHardwareLayoutChoices();
+    hardwareLayoutDialog.showModal();
+});
+document.getElementById("pwHardwareLayoutClose").addEventListener("click",closeHardwareLayout);
+document.getElementById("pwHardwareCancel").addEventListener("click",closeHardwareLayout);
+hardwareLayoutDialog.addEventListener("close",()=>{hardwareDraft=null;});
+document.getElementById("pwHardwareBasic").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    const available=orderedDevices(allAvailableDevices(),[]);
+    // Four principal monitors. Sensor-by-sensor customization remains intact.
+    hardwareDraft.order=available.map(deviceKey);
+    hardwareDraft.hidden=available
+        .filter(d=>!["Cpu","Memory","Storage"].includes(d.category)
+            && !(d.category||"").startsWith("Gpu"))
+        .map(deviceKey);
+    renderHardwareLayoutChoices();
+});
+document.getElementById("pwHardwareReset").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    hardwareDraft={order:[],hidden:[]};
+    renderHardwareLayoutChoices();
+});
+document.getElementById("pwHardwareApply").addEventListener("click",()=>{
+    if(!hardwareDraft)return;
+    hardwareLayout={
+        order:[...hardwareDraft.order],
+        hidden:[...hardwareDraft.hidden]
+    };
+    saveHardwareLayout();
+    hardwareLayoutSignature=null;
+    renderHardwareDashboard();
+    closeHardwareLayout();
+});
+
 // ==========================================
 // START
 // ==========================================
 
+loadHardwareLayout();
 loadSensorPreferences();
 refreshHardwareMonitor();

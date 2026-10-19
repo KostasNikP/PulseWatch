@@ -734,7 +734,7 @@ function requestReset(group, kind) {
     pendingResetGroup = group;
     pendingResetKind = kind;
     const all = group === "all";
-    const target = all ? "all five sections" : groupLabels[group];
+    const target = all ? "all six sections" : groupLabels[group];
 
     if (kind === "defaults") {
         resetTitle.textContent = all

@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="/static/style.css?v=0.3.0-gpu-fix1">
     <link rel="stylesheet" href="/static/dashboard-v3.css?v=0.3.0-gpu-fix1">
-    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets7">
+    <link rel="stylesheet" href="/static/dashboard-widgets.css?v=0.3.0-widgets8">
 </head>
 
 <body>
@@ -18,6 +18,8 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
+            <button id="pwSidebarToggle" class="pw-sidebar-toggle" type="button"
+                    aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">‹</button>
 
             <a href="#overview" class="brand">
                 <div class="brand-icon">P</div>
@@ -35,31 +37,31 @@
 
                     <a href="#overview" class="nav-item active">
                         <span class="nav-icon">◫</span>
-                        Overview
+                        <span class="pw-nav-label">Overview</span>
                     </a>
 
                     <a href="#hardware" class="nav-item">
                         <span class="nav-icon">▣</span>
-                        Hardware Monitor
+                        <span class="pw-nav-label">Hardware Monitor</span>
                     </a>
 
                     <a href="#live-charts" class="nav-item">
                         <span class="nav-icon">⌁</span>
-                        Live Monitoring
+                        <span class="pw-nav-label">Live Monitoring</span>
                     </a>
 
                     <a href="#history" class="nav-item">
                         <span class="nav-icon">◷</span>
-                        History
+                        <span class="pw-nav-label">History</span>
                     </a>
 
                     <a href="#alerts" class="nav-item">
                         <span class="nav-icon">⚠</span>
-                        System Alerts
+                        <span class="pw-nav-label">System Alerts</span>
                     </a>
                     <a href="#alert-settings" class="nav-item">
                         <span class="nav-icon">⚙</span>
-                        Alert Settings
+                        <span class="pw-nav-label">Alert Settings</span>
                     </a>
 
                 </nav>
@@ -154,6 +156,23 @@
                                     </button>
                             
                                 </div>
+                                <details class="pw-overview-options" data-pw-options="cpu">
+                                    <summary aria-label="CPU options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="cpu"
+                             aria-label="CPU widget positioning">
+                            
+                            <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                            <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                            <button type="button" class="pw-mini-reset" data-pw-reset="cpu"
+                                    title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="cpu"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
+                            
+                        </div>
+                                    </div>
+                                </details>
                             
                                 
                             
@@ -186,17 +205,7 @@
                             <canvas id="overviewCpuChart"></canvas>
                         </div>
                         
-                        <div class="pw-mini-layout-controls" data-pw-layout-group="cpu"
-                             aria-label="CPU widget positioning">
-                            <span>Widget layout</span>
-                            <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
-                            <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
-                            <button type="button" class="pw-mini-reset" data-pw-reset="cpu"
-                                    title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
-                                <button type="button" class="pw-mini-defaults" data-pw-defaults="cpu"
-                                        title="Restore original sensor selection and layout">Reset to defaults</button>
-                            <small>Free: drag any panel to a position you choose</small>
-                        </div>
+                        
                         <div id="pwCpuMiniWidgets" class="pw-mini-region" hidden
                              aria-label="Customizable CPU sensors"></div>
 
@@ -241,6 +250,23 @@
                                         </button>
 
                                     </div>
+                                <details class="pw-overview-options" data-pw-options="gpu">
+                                    <summary aria-label="GPU options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="gpu"
+                                 aria-label="GPU widget positioning">
+                                
+                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
+                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
+                            <button type="button" class="pw-mini-reset" data-pw-reset="gpu"
+                                    title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
+                                <button type="button" class="pw-mini-defaults" data-pw-defaults="gpu"
+                                        title="Restore original sensor selection and layout">Reset to defaults</button>
+                                
+                            </div>
+                                    </div>
+                                </details>
                                     
                                 </div>
                             </div>
@@ -279,17 +305,7 @@
                                 <canvas id="overviewGpuChart"></canvas>
                             </div>
 
-                            <div class="pw-mini-layout-controls" data-pw-layout-group="gpu"
-                                 aria-label="GPU widget positioning">
-                                <span>Widget layout</span>
-                                <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
-                                <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
-                            <button type="button" class="pw-mini-reset" data-pw-reset="gpu"
-                                    title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
-                                <button type="button" class="pw-mini-defaults" data-pw-defaults="gpu"
-                                        title="Restore original sensor selection and layout">Reset to defaults</button>
-                                <small>Free: drag any panel to a position you choose</small>
-                            </div>
+                            
                             <div id="pwGpuMiniWidgets" class="pw-mini-region" hidden
                                  aria-label="Customizable GPU sensors"></div>
 
@@ -321,20 +337,27 @@
                                     <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
                                     <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
                                 </div>
-                            </header>
-                            <div class="pw-extra-stats"><span>Memory usage <strong id="ram">--%</strong></span></div>
-                            <div class="pw-extra-primary" hidden></div>
-                            <div class="pw-mini-layout-controls" data-pw-layout-group="ram"
+                                <details class="pw-overview-options" data-pw-options="ram">
+                                    <summary aria-label="RAM options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="ram"
                                  aria-label="RAM widget positioning">
-                                <span>Widget layout</span>
+                                
                                 <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="ram"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
                                 <button type="button" class="pw-mini-defaults" data-pw-defaults="ram"
                                         title="Restore original sensor selection and layout">Reset to defaults</button>
-                                <small>Drag individual sensor widgets to customize their positions</small>
+                                
                             </div>
+                                    </div>
+                                </details>
+                            </header>
+                            <div class="pw-extra-stats"><span>Memory usage <strong id="ram">--%</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
+                            
                             <div id="pwRamMiniWidgets"
                                  class="pw-mini-region" aria-label="RAM customizable sensors"></div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="ram" aria-label="Resize RAM card" title="Drag to freely resize RAM card"><span aria-hidden="true">⤡</span></button>
@@ -354,20 +377,27 @@
                                     <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
                                     <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
                                 </div>
-                            </header>
-                            <div class="pw-extra-stats"><span>C: used capacity <strong id="disk">--%</strong></span></div>
-                            <div class="pw-extra-primary" hidden></div>
-                            <div class="pw-mini-layout-controls" data-pw-layout-group="storage"
+                                <details class="pw-overview-options" data-pw-options="storage">
+                                    <summary aria-label="STORAGE options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="storage"
                                  aria-label="STORAGE widget positioning">
-                                <span>Widget layout</span>
+                                
                                 <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="storage"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
                                 <button type="button" class="pw-mini-defaults" data-pw-defaults="storage"
                                         title="Restore original sensor selection and layout">Reset to defaults</button>
-                                <small>Drag individual sensor widgets to customize their positions</small>
+                                
                             </div>
+                                    </div>
+                                </details>
+                            </header>
+                            <div class="pw-extra-stats"><span>C: used capacity <strong id="disk">--%</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
+                            
                             <div id="pwStorageMiniWidgets"
                                  class="pw-mini-region" aria-label="STORAGE customizable sensors"></div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="storage" aria-label="Resize STORAGE card" title="Drag to freely resize STORAGE card"><span aria-hidden="true">⤡</span></button>
@@ -387,20 +417,27 @@
                                     <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
                                     <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
                                 </div>
-                            </header>
-                            <div class="pw-extra-stats"><span>↓ Download <strong id="download">-- Mbps</strong></span><span>↑ Upload <strong id="upload">-- Mbps</strong></span></div>
-                            <div class="pw-extra-primary" hidden></div>
-                            <div class="pw-mini-layout-controls" data-pw-layout-group="network"
+                                <details class="pw-overview-options" data-pw-options="network">
+                                    <summary aria-label="NETWORK options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="network"
                                  aria-label="NETWORK widget positioning">
-                                <span>Widget layout</span>
+                                
                                 <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="network"
                                         title="Reset widget sizes, modes and positions without removing selected sensors">Reset layout</button>
                                 <button type="button" class="pw-mini-defaults" data-pw-defaults="network"
                                         title="Restore original sensor selection and layout">Reset to defaults</button>
-                                <small>Drag individual sensor widgets to customize their positions</small>
+                                
                             </div>
+                                    </div>
+                                </details>
+                            </header>
+                            <div class="pw-extra-stats"><span>↓ Download <strong id="download">-- Mbps</strong></span><span>↑ Upload <strong id="upload">-- Mbps</strong></span></div>
+                            <div class="pw-extra-primary" hidden></div>
+                            
                             <div id="pwNetworkMiniWidgets"
                                  class="pw-mini-region" aria-label="NETWORK customizable sensors"></div>
                         <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="network" aria-label="Resize NETWORK card" title="Drag to freely resize NETWORK card"><span aria-hidden="true">⤡</span></button>
@@ -419,16 +456,23 @@
                                     <button type="button" data-pw-extra-view="compact" aria-pressed="false">Compact</button>
                                     <button type="button" class="active" data-pw-extra-view="widgets" aria-pressed="true">Widgets</button>
                                 </div>
-                            </header>
-                            <div class="pw-extra-primary" hidden></div>
-                            <div class="pw-mini-layout-controls" data-pw-layout-group="motherboard" aria-label="Motherboard widget positioning">
-                                <span>Widget layout</span>
+                                <details class="pw-overview-options" data-pw-options="motherboard">
+                                    <summary aria-label="MOTHERBOARD options" title="Widget layout and reset options">⋯</summary>
+                                    <div class="pw-overview-popup">
+                                        <span class="pw-options-title">Widget options</span>
+                                        <div class="pw-mini-layout-controls" data-pw-layout-group="motherboard" aria-label="Motherboard widget positioning">
+                                
                                 <button type="button" data-pw-mode="auto" aria-pressed="true">Auto</button>
                                 <button type="button" data-pw-mode="free" aria-pressed="false">Free</button>
                                 <button type="button" class="pw-mini-reset" data-pw-reset="motherboard">Reset layout</button>
                                 <button type="button" class="pw-mini-defaults" data-pw-defaults="motherboard">Reset to defaults</button>
-                                <small>Drag individual sensor widgets to customize their positions</small>
+                                
                             </div>
+                                    </div>
+                                </details>
+                            </header>
+                            <div class="pw-extra-primary" hidden></div>
+                            
                             <div id="pwMotherboardMiniWidgets" class="pw-mini-region" aria-label="Motherboard customizable sensors"></div>
                             <button type="button" class="pw3-resize-handle pw-parent-resize" data-pw-parent-resize="motherboard" aria-label="Resize Motherboard card" title="Drag to freely resize Motherboard card"><span aria-hidden="true">⤡</span></button>
                         </article>
@@ -451,6 +495,9 @@
                         
                             <button id="customizeSensors" type="button" class="hardware-customize-button">
                                 Customize Sensors
+                            </button>
+                            <button id="pwHardwareLayoutOpen" type="button" class="hardware-customize-button">
+                                Arrange Cards
                             </button>
                         
                             <span id="hardwareStatus" class="live-indicator" data-state="connecting">
@@ -697,7 +744,30 @@
     </div>
 
 
-    <!-- Individual CPU/GPU sensor widget selector -->
+    <!-- Hardware cards can be reordered and hidden without changing their sensors. -->
+    <dialog id="pwHardwareLayoutDialog" class="pw-hardware-dialog"
+            aria-labelledby="pwHardwareLayoutTitle">
+        <header class="pw-hardware-dialog-header">
+            <div>
+                <h2 id="pwHardwareLayoutTitle">Arrange Hardware Monitor</h2>
+                <p>Choose which device cards appear and arrange their order.</p>
+            </div>
+            <button type="button" id="pwHardwareLayoutClose" aria-label="Close">×</button>
+        </header>
+        <div id="pwHardwareLayoutList" class="pw-hardware-layout-list"></div>
+        <footer class="pw-hardware-dialog-footer">
+            <div class="pw-hardware-presets">
+                <button type="button" id="pwHardwareBasic">Basic</button>
+                <button type="button" id="pwHardwareReset">Reset</button>
+            </div>
+            <div class="pw-hardware-dialog-actions">
+                <button type="button" id="pwHardwareCancel">Cancel</button>
+                <button type="button" id="pwHardwareApply" class="primary">Apply</button>
+            </div>
+        </footer>
+    </dialog>
+
+    <!-- Individual sensor widget selector -->
     <dialog id="pwCustomizeDialog" class="pw-customize-dialog"
             aria-labelledby="pwCustomizeTitle">
         <header class="pw-customize-heading">
@@ -762,10 +832,12 @@
 <!-- Notifications -->
 <script src="/static/notifications.js?v=0.3.0-gpu-fix1"></script>
 <script src="/static/settings.js?v=0.3.0-gpu-fix1"></script>
-<script src="/static/hardware.js?v=0.3.0-widgets2"></script>
-<script src="/static/dashboard-widgets.js?v=0.3.0-widgets7"></script>
+<script src="/static/hardware.js?v=0.3.0-widgets3"></script>
+<script src="/static/dashboard-widgets.js?v=0.3.0-widgets8"></script>
 <script src="/static/dashboard-extra-modes.js?v=0.3.0-extra1"></script>
 <script src="/static/dashboard-parent-layout.js?v=0.3.0-parent1"></script>
+<script src="/static/sidebar-layout.js?v=0.3.0-side1"></script>
+<script src="/static/overview-options.js?v=0.3.0-options1"></script>
 
 </body>
 
