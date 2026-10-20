@@ -1,6 +1,6 @@
 
 #define MyAppName "RigObserver"
-#define MyAppVersion "0.3.0"
+#define MyAppVersion "0.1.0"
 #define MyAppPublisher "Konstantinos Nikolakopoulos"
 #define MyAppExeName "RigObserver.exe"
 
@@ -21,7 +21,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 OutputDir=installer
-OutputBaseFilename=RigObserver_Setup_v0.3.0
+OutputBaseFilename=RigObserver_Setup_v0.1.0
 
 SetupIconFile=assets\RigObserver.ico
 UninstallDisplayIcon={app}\RigObserver.exe
