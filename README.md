@@ -2,6 +2,10 @@
 
 **Real-time PC hardware and system monitoring for Windows**
 
+## Live Demo
+
+![RigObserver Demo](demo.gif)
+
 [**Download for Windows (v0.1.0)**](https://github.com/KostasNikP/RigObserver/releases/download/v0.1.0/RigObserver_Setup_v0.1.0.exe) · [Latest release](https://github.com/KostasNikP/RigObserver/releases/tag/v0.1.0)
 
 RigObserver is a local desktop application for monitoring CPU, GPU, RAM, storage, network activity, and motherboard sensors. It combines a configurable performance dashboard with live hardware readings, alerts, and historical system metrics.
