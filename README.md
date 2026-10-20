@@ -2,11 +2,33 @@
 
 **Real-time PC hardware and system monitoring for Windows**
 
+[**Download for Windows (v0.1.0)**](https://github.com/KostasNikP/RigObserver/releases/download/v0.1.0/RigObserver_Setup_v0.1.0.exe) · [Latest release](https://github.com/KostasNikP/RigObserver/releases/tag/v0.1.0)
+
 RigObserver is a local desktop application for monitoring CPU, GPU, RAM, storage, network activity, and motherboard sensors. It combines a configurable performance dashboard with live hardware readings, alerts, and historical system metrics.
 
 Built with **Python, FastAPI, pywebview (WebView2), C# / .NET 10, LibreHardwareMonitor, and JavaScript**.
 
-> **Release status:** RigObserver **v0.1.0** with the new purple icon has been built and tested on Windows. Its installer is ready for the upcoming release. Older PulseWatch / RigObserver releases remain temporarily available while the v0.1.0 release is being prepared.
+## Screenshots
+
+Actual screenshots of the RigObserver Windows desktop application.
+
+### Performance Overview
+
+A customizable dashboard with dedicated CPU, GPU, RAM, Storage, Network, and Motherboard monitoring cards. Mix gauges, compact readings, graphs, and individual sensor widgets to suit your workflow.
+
+![RigObserver Performance Overview showing CPU, GPU, RAM, Storage, Network and Motherboard cards](screenshots/overview.png)
+
+### Hardware Monitor
+
+Explore detected hardware, current sensor readings, temperature and usage data, and expandable sensor categories.
+
+![RigObserver Hardware Monitor showing CPU, GPU, memory, storage and motherboard sensors](screenshots/hardware-monitor.png)
+
+### Live Monitoring
+
+Track CPU, memory, and network activity with real-time and historical performance charts.
+
+![RigObserver Live Monitoring showing CPU, memory, network and historical charts](screenshots/live-monitoring.png)
 
 ## Features
 
@@ -51,7 +73,11 @@ The packaged version does **not** require installing Python or the .NET SDK sepa
 
 ### Download and installation
 
-The new **`RigObserver_Setup_v0.1.0.exe`** installer has been built and tested locally. It will be available from the [official GitHub Releases page](https://github.com/KostasNikP/RigObserver/releases) after its publication. Until then, the files currently listed on GitHub are older builds.
+1. Download [**RigObserver_Setup_v0.1.0.exe**](https://github.com/KostasNikP/RigObserver/releases/download/v0.1.0/RigObserver_Setup_v0.1.0.exe) from the [official v0.1.0 release](https://github.com/KostasNikP/RigObserver/releases/tag/v0.1.0).
+2. Run the installer and follow the Windows setup wizard.
+3. Launch **RigObserver** from the Start menu (or a desktop shortcut, if selected during installation).
+
+Windows may display an unrecognized publisher warning because the installer is not code-signed.
 
 ### Your existing settings
 
