@@ -1,8 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('app/static', 'app/static')]
-binaries = [('sensor_bridge/bin/Release/net10.0/win-x64/publish/sensor_bridge.exe', 'sensor_bridge')]
+# Include the whole self-contained .NET publish directory: the executable needs
+# its companion DLLs, runtime configuration and native runtime files.
+datas = [
+    ('app/static', 'app/static'),
+    ('sensor_bridge/bin/Release/net10.0/win-x64/publish', 'sensor_bridge'),
+]
+binaries = []
 hiddenimports = ['app.api']
 tmp_ret = collect_all('webview')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
