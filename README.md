@@ -6,7 +6,7 @@ RigObserver is a local desktop application for monitoring CPU, GPU, RAM, storage
 
 Built with **Python, FastAPI, pywebview (WebView2), C# / .NET 10, LibreHardwareMonitor, and JavaScript**.
 
-> **Release status:** RigObserver **v0.3.0** has been built and tested on Windows, but its new installer has **not yet been published** to GitHub Releases. The existing [v0.2.0 release](https://github.com/KostasNikP/RigObserver/releases/tag/v0.2.0) belongs to the earlier **PulseWatch** branding.
+> **Release status:** RigObserver **v0.1.0** with the new purple icon has been built and tested on Windows. Its installer is ready for the upcoming release. Older PulseWatch / RigObserver releases remain temporarily available while the v0.1.0 release is being prepared.
 
 ## Features
 
@@ -51,7 +51,7 @@ The packaged version does **not** require installing Python or the .NET SDK sepa
 
 ### Download and installation
 
-The RigObserver v0.3.0 installer is being prepared for publication. When it is published, obtain **`RigObserver_Setup_v0.3.0.exe`** from the [official GitHub Releases page](https://github.com/KostasNikP/RigObserver/releases). Until that happens, do not mistake the older PulseWatch v0.2.0 installer for RigObserver v0.3.0.
+The new **`RigObserver_Setup_v0.1.0.exe`** installer has been built and tested locally. It will be available from the [official GitHub Releases page](https://github.com/KostasNikP/RigObserver/releases) after its publication. Until then, the files currently listed on GitHub are older builds.
 
 ### Your existing settings
 
@@ -65,11 +65,11 @@ The Windows application currently keeps using the legacy **`%LOCALAPPDATA%\Pulse
 - .NET 10 SDK for building the sensor bridge.
 - Internet access to install dependencies and access the Chart.js CDN used by the dashboard.
 
-Clone the repository (its GitHub URL has **not yet been renamed**):
+Clone the repository:
 
 ```powershell
 git clone https://github.com/KostasNikP/RigObserver.git
-cd PulseWatch
+cd RigObserver
 ```
 
 Run **`setup_rigobserver.bat`** to create `.venv`, install Python dependencies, and build the development sensor bridge. Then start the desktop application:
@@ -98,7 +98,7 @@ dotnet publish .\sensor_bridge\sensor_bridge.csproj -c Release -r win-x64 --self
 
 The compiled application is created in `dist\RigObserver\RigObserver.exe`.
 
-To package an installer, open **`RigObserver.iss`** in Inno Setup 6 and choose **Build → Compile**. The expected installer path is `installer\RigObserver_Setup_v0.3.0.exe`.
+To package an installer, open **`RigObserver.iss`** in Inno Setup 6 and choose **Build → Compile**. The expected installer path is `installer\RigObserver_Setup_v0.1.0.exe`.
 
 The `.spec` file expects `sensor_bridge\bin\Release\net10.0\win-x64\publish\sensor_bridge.exe` to exist before packaging. Install Inno Setup separately when building the installer.
 
