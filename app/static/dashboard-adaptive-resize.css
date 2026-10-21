@@ -1,0 +1,79 @@
+/* RigObserver v0.3: content-aware parent and sensor resize.
+   Respect stored widget dimensions and independent Smart/Free placement. */
+
+/* Charts use the spare height inside a resized parent card, rather than
+   remaining at their old fixed 230/240px size. */
+.overview-section .dashboard > .pw3-cpu-card[data-view="graph"] .pw-overview-content,
+.overview-section .dashboard > .pw3-gpu-card[data-view="graph"] .pw-overview-content,
+.overview-section .dashboard > .pw-extra-card[data-view="graph"] .pw-overview-content {
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+.overview-section .dashboard > .pw3-cpu-card[data-view="graph"] .pw3-cpu-chart-container:not([hidden]),
+.overview-section .dashboard > .pw3-gpu-card[data-view="graph"] .pw3-gpu-chart-container:not([hidden]) {
+    display:block;
+    flex:1 1 190px;
+    height:auto;
+    min-height:165px;
+    min-width:0;
+    width:100%;
+}
+.overview-section .dashboard > .pw3-gpu-card[data-view="graph"] .pw3-gpu-chart-container:not([hidden]) {
+    margin-top:10px;
+}
+.overview-section .dashboard > .pw-extra-card[data-view="graph"] .pw-extra-primary:not([hidden]) {
+    flex:1 1 220px;
+    min-height:195px;
+    min-width:0;
+    width:100%;
+}
+.overview-section .dashboard > .pw-extra-card[data-view="graph"] .pw-extra-primary svg {
+    display:block;
+    flex:1 1 150px;
+    min-height:145px;
+    height:auto;
+    width:100%;
+}
+
+/* In Auto sensor mode, share the spare horizontal space across a row.
+   Saved widths remain the starting size, so manual widget resizing works.
+   Free-positioned sensors keep their exact custom widths and coordinates. */
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget {
+    flex-grow:1;
+    flex-shrink:1;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) {
+    justify-content:flex-start;
+    align-items:stretch;
+    min-width:0;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-graph {
+    min-width:0;
+    flex:1 1 auto;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-graph svg {
+    width:100%;
+    height:100%;
+}
+
+/* Gauge and headline figures also take advantage of a larger card, without
+   forcing controls beyond the available space on narrow windows. */
+.overview-section .dashboard > .pw3-cpu-card[data-view="gauge"] .pw3-cpu-gauge-ring {
+    width:min(100%,clamp(190px,32cqw,330px));
+    height:auto;
+    aspect-ratio:1;
+}
+.overview-section .dashboard > .pw3-gpu-card[data-view="gauge"] .pw3-gpu-gauge {
+    width:min(100%,clamp(170px,29cqw,310px));
+    height:auto;
+    aspect-ratio:1;
+}
+@media(max-width:700px) {
+    /* On mobile, keep charts legible and let the card grow naturally. */
+    .overview-section .dashboard > .pw3-cpu-card[data-view="graph"] .pw3-cpu-chart-container:not([hidden]),
+    .overview-section .dashboard > .pw3-gpu-card[data-view="graph"] .pw3-gpu-chart-container:not([hidden]) {
+        min-height:190px;
+        flex-basis:190px;
+    }
+}
