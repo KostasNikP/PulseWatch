@@ -54,7 +54,9 @@
     border:1px solid #405870;
     background:#16293a;
     color:#dceefc;
-    font:12px/1.25 inherit;
+    font-size:12px;
+    line-height:1.25;
+    font-family:inherit;
     border-radius:7px;
     text-align:left;
     cursor:pointer;
