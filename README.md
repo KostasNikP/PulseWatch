@@ -43,6 +43,7 @@ Track CPU, memory, and network activity with real-time and historical performanc
 - Resize parent cards freely and retain their individual dimensions.
 - Adapt CPU/GPU and other overview Graph displays to the available parent-card height, and let Auto sensor widgets share unused row width without changing their saved sizes.
 - In resized cards, Auto sensor-widget rows can also grow vertically to use spare height; Free sensor-widget mode retains exact saved dimensions.
+- Balance Auto sensor-widget columns by the available card width and sensor count (e.g. four sensors in two rows rather than a cramped 3+1 layout), without altering Free mode positions or saved widget sizes.
 - Update Chart.js canvas sizes when a card is resized directly.
 - Reorder the six main dashboard cards by dragging their handles, or use Move earlier / Move later; card order is saved locally.
 - Choose **Smart Layout** to automatically pack cards into available space, or **Free Layout** to drag cards to any position with optional gaps.
