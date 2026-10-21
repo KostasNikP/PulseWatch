@@ -18,7 +18,8 @@ let positions = {};
 let mode = "smart";
 try {
     const stored = localStorage.getItem(MODE_KEY);
-    if (stored === "free") mode = "free";
+    // The mode is JSON encoded; older unquoted values also remain valid.
+    if (stored === "free" || stored === '"free"') mode = "free";
     const data = JSON.parse(localStorage.getItem(POSITION_KEY) || "{}");
     if (data && typeof data === "object" && !Array.isArray(data)) {
         for (const id of ids) {
