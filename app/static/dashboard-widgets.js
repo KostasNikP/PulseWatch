@@ -189,6 +189,11 @@ function createCard(item) {
         Math.max(MIN_W,regions[item.group].parentElement.clientWidth-54);
     node.style.width=clamp(Number(previous.width)||265,MIN_W,Math.max(MIN_W,parentWidth-2))+"px";
     node.style.height=clamp(Number(previous.height)||198,MIN_H,MAX_H)+"px";
+    // Honor manual heights saved in earlier releases as well.
+    if (previous.manualHeight===true ||
+        (Number.isFinite(previous.height) && previous.height>=MIN_H)) {
+        node.classList.add("pw-mini-manual-height");
+    }
 
     const card={item,node,stat,value,extrema,graph,gauge,gaugeValue,
         bigValue,line,area,button,mode:"graph",samples:[],lastTime:null};
@@ -349,7 +354,15 @@ function createCard(item) {
         if(e.button!==0)return;
         e.preventDefault();e.stopPropagation();
         const box=node.getBoundingClientRect();
-        resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height};
+        resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height,
+            previousWidth:node.style.width,previousHeight:node.style.height,
+            wasManual:node.classList.contains("pw-mini-manual-height")};
+        // A manual gesture must not be blocked by the Auto filler's
+        // temporary min-height. Lock the currently visible height first
+        // so the widget does not jump when the filler is removed.
+        node.style.height=Math.round(box.height)+"px";
+        node.classList.add("pw-mini-manual-height");
+        node.style.removeProperty("--pw-auto-widget-min-height");
         if (isFree(item.group)) {
             freePins.set(item.group,{
                 id:item.id,
@@ -373,23 +386,33 @@ function createCard(item) {
             MIN_H,MAX_H))+"px";
         if (isFree(item.group)) layoutFreeWidgets(item.group);
     });
-    function finish() {
+    function finish(commit=true) {
         if(!resizing)return;
+        const session=resizing;
         resizing=null;
         corner.classList.remove("is-resizing");
-        state.layout[item.id]={...(state.layout[item.id]||{}),
-            width:Math.round(node.getBoundingClientRect().width),
-            height:Math.round(node.getBoundingClientRect().height)};
+        if (!commit) {
+            node.style.width=session.previousWidth;
+            node.style.height=session.previousHeight;
+            node.classList.toggle("pw-mini-manual-height",session.wasManual);
+        } else {
+            state.layout[item.id]={...(state.layout[item.id]||{}),
+                width:Math.round(node.getBoundingClientRect().width),
+                height:Math.round(node.getBoundingClientRect().height),
+                manualHeight:true};
+        }
         if (isFree(item.group)) {
-            state.freePriority[item.group]=item.id;
+            if (commit) state.freePriority[item.group]=item.id;
             freePins.delete(item.group);
             layoutFreeWidgets(item.group);
         }
-        save();
+        if (commit) save();
+        // Immediately refresh unused-height allocation for sibling widgets.
+        window.dispatchEvent(new Event("pw-mini-widget-resized"));
     }
-    corner.addEventListener("pointerup",finish);
-    corner.addEventListener("pointercancel",finish);
-    corner.addEventListener("lostpointercapture",finish);
+    corner.addEventListener("pointerup",()=>finish(true));
+    corner.addEventListener("pointercancel",()=>finish(false));
+    corner.addEventListener("lostpointercapture",()=>finish(false));
     return card;
 }
 
@@ -919,6 +942,8 @@ function resetGroupLayout(group) {
             Math.max(MIN_W, regions[group].parentElement.clientWidth - 54);
         node.style.width = Math.min(265, Math.max(MIN_W, availableWidth - 2)) + "px";
         node.style.height = "198px";
+        node.classList.remove("pw-mini-manual-height");
+        node.style.removeProperty("--pw-auto-widget-min-height");
         node.style.removeProperty("left");
         node.style.removeProperty("top");
         modeOf(card, "graph");
