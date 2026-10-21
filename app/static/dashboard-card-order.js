@@ -214,6 +214,8 @@ for (const [id, , headingSelector] of groups) {
     handles.set(id, grip);
 
     grip.addEventListener("pointerdown", event => {
+        // In Free layout the layout controller uses this same drag handle.
+        if (dashboard.classList.contains("pw-layout-free")) return;
         if (session || (event.pointerType === "mouse" && event.button !== 0)) return;
         event.preventDefault();
         event.stopPropagation();
@@ -254,6 +256,7 @@ for (const [id, , headingSelector] of groups) {
             stopDrag(false);
     });
     grip.addEventListener("keydown", event => {
+        if (dashboard.classList.contains("pw-layout-free")) return;
         if (!event.altKey) return;
         if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
             event.preventDefault();
