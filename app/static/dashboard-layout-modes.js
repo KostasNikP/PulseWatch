@@ -151,10 +151,11 @@ function updateButtons() {
 }
 function switchMode(next,save=true) {
     if (!["smart","free"].includes(next)) return;
-    if (next === "free" && mode === "smart") {
-        // Capture smart positions for first-time Free mode. Previously saved
-        // Free positions are preserved when switching back and forth.
+    if (next === "free") {
+        // Seed cards missing saved Free coordinates using their current
+        // positions, including on startup when Free was saved previously.
         snapshotCoordinates();
+        store(POSITION_KEY,positions);
     }
     mode = next;
     dashboard.classList.toggle("pw-layout-smart",mode==="smart");
@@ -195,6 +196,12 @@ function autoScroll() {
     if (y<edge) window.scrollBy(0,-Math.min(18,(edge-y)/3+3));
     else if (y>window.innerHeight-edge)
         window.scrollBy(0,Math.min(18,(y-(window.innerHeight-edge))/3+3));
+    const drag=activeDrag;
+    if (drag) {
+        const scrollDelta=drag.parentTop-dashboard.getBoundingClientRect().top;
+        freeMove(drag.id,drag.start.x+drag.dx,
+            drag.start.y+drag.dy+scrollDelta);
+    }
     scrollFrame=requestAnimationFrame(autoScroll);
 }
 function freeMove(id,x,y) {
@@ -244,6 +251,7 @@ for (const card of cards) {
         activeDrag={
             id,card,pointerId:event.pointerId,
             start,startX:event.clientX,startY:event.clientY,
+            parentTop:parent.top,dx:0,dy:0,
             clientY:event.clientY,moved:false
         };
         grip.setPointerCapture(event.pointerId);
@@ -253,6 +261,8 @@ for (const card of cards) {
         activeDrag.clientY=event.clientY;
         const dx=event.clientX-activeDrag.startX;
         const dy=event.clientY-activeDrag.startY;
+        activeDrag.dx=dx;
+        activeDrag.dy=dy;
         if (!activeDrag.moved && Math.hypot(dx,dy)>5) {
             activeDrag.moved=true;
             card.classList.add("pw-free-card-moving");
@@ -260,7 +270,9 @@ for (const card of cards) {
             scrollFrame=requestAnimationFrame(autoScroll);
         }
         if (activeDrag.moved) {
-            freeMove(id,activeDrag.start.x+dx,activeDrag.start.y+dy);
+            freeMove(id,activeDrag.start.x+dx,
+                activeDrag.start.y+dy+
+                activeDrag.parentTop-dashboard.getBoundingClientRect().top);
         }
     });
     grip.addEventListener("pointerup",event=>finishDrag(true,event));
