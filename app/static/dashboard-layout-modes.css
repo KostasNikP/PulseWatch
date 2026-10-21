@@ -1,0 +1,78 @@
+/* Whole-card Smart / Free positioning. Sensor-widget modes are independent. */
+.pw-parent-layout-toolbar {
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    margin:0 0 18px;
+    padding:12px 14px;
+    border:1px solid #2a4157;
+    border-radius:12px;
+    background:#101b28;
+}
+.pw-parent-layout-heading {display:flex;flex-direction:column;gap:3px;}
+.pw-parent-layout-heading > span:first-child {
+    color:#e5f2ff;font-size:13px;font-weight:750;
+}
+#pwParentLayoutHint {font-size:12px;color:#9bb4c8;}
+.pw-parent-layout-buttons {display:flex;flex-wrap:wrap;align-items:center;gap:7px;}
+.pw-parent-layout-buttons button {
+    min-height:34px;
+    padding:7px 14px;
+    border:1px solid #42586d;
+    border-radius:8px;
+    background:#182b3d;
+    color:#d4e6f3;
+    font-weight:600;font-size:12px;line-height:1.4;font-family:inherit;
+    cursor:pointer;
+}
+.pw-parent-layout-buttons button.active {
+    background:#184b70;
+    color:#fff;
+    border-color:#43bbed;
+}
+.pw-parent-layout-buttons button:focus-visible {
+    outline:2px solid #65caff;
+    outline-offset:2px;
+}
+.pw-parent-layout-buttons button:hover:not(.active) {
+    border-color:#5fa9d4;background:#20394e;
+}
+.pw-parent-layout-buttons button[hidden] {display:none;}
+.overview-section .dashboard.pw-layout-smart,
+.overview-section .dashboard.pw-layout-free {
+    display:block;
+    position:relative;
+    min-height:260px;
+}
+.overview-section .dashboard.pw-layout-smart > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card),
+.overview-section .dashboard.pw-layout-free > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+    position:absolute;
+    margin:0;
+}
+.dashboard.pw-layout-free .pw-card-drag-handle {cursor:move;}
+.dashboard.pw-layout-free .pw-card-order-controls {display:none;}
+.dashboard.pw-layout-free .pw-free-card-moving {
+    z-index:40;
+    opacity:.85;
+    outline:2px solid #67d2ff;
+    box-shadow:0 16px 35px rgba(0,0,0,.45);
+}
+/* On narrow screens stack the cards; remember their desktop Free positions. */
+@media (max-width:700px) {
+    .overview-section .dashboard.pw-layout-smart,
+    .overview-section .dashboard.pw-layout-free {
+        display:flex;
+        flex-direction:column;
+        min-height:0;
+        height:auto !important;
+    }
+    .overview-section .dashboard.pw-layout-smart > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card),
+    .overview-section .dashboard.pw-layout-free > :is(.pw3-cpu-card,.pw3-gpu-card,.pw-extra-card) {
+        position:relative;
+        left:auto !important;
+        top:auto !important;
+        flex:0 0 auto;
+    }
+}
