@@ -1,0 +1,21 @@
+/* Expand Auto sensor widgets vertically when a parent overview card has
+   an explicitly resized height. Free sensor positions and saved heights are
+   never rewritten. */
+.overview-section .dashboard > [data-view="widgets"] .pw-overview-content {
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-overview-content > .pw-mini-region:not(.pw-mini-free) {
+    flex:1 1 auto;
+    min-height:0;
+    align-content:flex-start;
+    align-items:flex-start;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget {
+    min-height:max(155px,var(--pw-auto-widget-min-height,155px));
+}
+/* Preserve natural heights and absolute coordinates in Free widget mode. */
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region.pw-mini-free > .pw-mini-widget {
+    min-height:155px;
+}
