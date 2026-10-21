@@ -17,3 +17,10 @@
     flex-shrink:0;
     max-width:100%;
 }
+
+/* A deliberate horizontal resize must override Auto's comfortable-column
+   minimum. Preserve the exact saved width instead of stretching it back. */
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget.pw-mini-manual-width {
+    min-width:min(185px,100%);
+    flex:0 0 auto;
+}
