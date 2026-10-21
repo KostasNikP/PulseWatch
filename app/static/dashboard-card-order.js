@@ -48,7 +48,6 @@ function persist() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(order)); }
     catch (error) { console.warn("Card order could not be saved:", error); }
 }
-const moveButtons = new Map();
 const handles = new Map();
 const announcer = document.createElement("div");
 announcer.className = "pw-card-reorder-status";
@@ -64,11 +63,6 @@ function updateControls() {
             handle.title = "Drag to move " + id.toUpperCase() + " card. Alt + Up/Down also moves it.";
             handle.setAttribute("aria-label", "Reorder " + id.toUpperCase() +
                 " card, position " + (index + 1) + " of " + order.length);
-        }
-        const buttons = moveButtons.get(id);
-        if (buttons) {
-            buttons.earlier.disabled = index <= 0;
-            buttons.later.disabled = index >= order.length - 1;
         }
     }
 }
@@ -267,24 +261,6 @@ for (const [id, , headingSelector] of groups) {
         }
     });
 
-    const popup = card.querySelector(".pw-overview-popup");
-    if (popup) {
-        const toolbar = document.createElement("div");
-        toolbar.className = "pw-card-order-controls";
-        const label = document.createElement("span");
-        label.textContent = "Card position";
-        const earlier = document.createElement("button");
-        earlier.type = "button";
-        earlier.textContent = "Move earlier ↑";
-        const later = document.createElement("button");
-        later.type = "button";
-        later.textContent = "Move later ↓";
-        earlier.addEventListener("click", () => moveBy(id, -1));
-        later.addEventListener("click", () => moveBy(id, 1));
-        toolbar.append(label, earlier, later);
-        popup.appendChild(toolbar);
-        moveButtons.set(id, { earlier, later });
-    }
 }
 const footer = document.querySelector(".pw-customize-footer-left");
 if (footer) {
