@@ -24,10 +24,14 @@ const catalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
 const hardwareCatalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
 const metricsCatalog = Object.fromEntries(GROUPS.map(g => [g,new Map()]));
 const cards = new Map();
+// Live, unsaved drag/resize coordinates take precedence over the saved layout.
+const freePins = new Map();
+const FREE_GAP = 12;
 let state = {
     selected:Object.fromEntries(GROUPS.map(g => [g,null])),
     layout:{},
-    free:Object.fromEntries(GROUPS.map(g => [g,false]))
+    free:Object.fromEntries(GROUPS.map(g => [g,false])),
+    freePriority:Object.fromEntries(GROUPS.map(g => [g,null]))
 };
 let draft = null, category = "cpu", inventorySig = "";
 let lastSnapshot = null;
@@ -52,6 +56,8 @@ try {
         if(stored.layout&&typeof stored.layout==="object")state.layout=stored.layout;
         for (const g of GROUPS) {
             state.free[g] = stored.free?.[g] === true;
+            if (typeof stored.freePriority?.[g] === "string")
+                state.freePriority[g] = stored.freePriority[g];
         }
     }
 } catch(e) {console.warn("Could not restore widgets:",e);}
@@ -238,14 +244,15 @@ function createCard(item) {
             const area = regions[item.group];
             const width = Math.max(MIN_W, area.clientWidth || area.parentElement.clientWidth - 54);
             const cardWidth = Number.parseFloat(node.style.width) || MIN_W;
-            node.style.left = Math.round(clamp(
+            const x = Math.round(clamp(
                 drag.originX + e.clientX - drag.startX,
                 0, Math.max(0, width - cardWidth)
-            )) + "px";
-            node.style.top = Math.round(Math.max(
-                0, drag.originY + e.clientY - drag.startY
-            )) + "px";
-            resizeFreeCanvas(item.group);
+            ));
+            const y = Math.round(clamp(
+                drag.originY + e.clientY - drag.startY, 0, 10000
+            ));
+            freePins.set(item.group,{id:item.id,x,y});
+            layoutFreeWidgets(item.group);
             return;
         }
 
@@ -279,18 +286,17 @@ function createCard(item) {
         grip.classList.remove("is-moving");
         removeMovePreview();
         if (drag.free) {
-            if (commit && drag.active) {
-                state.layout[item.id] = {
-                    ...(state.layout[item.id] || {}),
-                    x: Number.parseFloat(node.style.left) || 0,
-                    y: Number.parseFloat(node.style.top) || 0
+            const pin=freePins.get(item.group);
+            if (commit && drag.active && pin?.id===item.id) {
+                state.layout[item.id]={
+                    ...(state.layout[item.id]||{}),
+                    x:pin.x,y:pin.y
                 };
+                state.freePriority[item.group]=item.id;
                 save();
-            } else {
-                node.style.left = drag.originX + "px";
-                node.style.top = drag.originY + "px";
             }
-            resizeFreeCanvas(item.group);
+            freePins.delete(item.group);
+            layoutFreeWidgets(item.group);
             return;
         }
         if (!commit || !drag.active || !drag.inside) return;
@@ -324,10 +330,9 @@ function createCard(item) {
                 0, Math.max(0, width - cardWidth)
             ));
             const y = Math.round(Math.max(0, (Number(pos.y) || 0) + dy));
-            state.layout[item.id] = { ...pos, x, y };
-            node.style.left = x + "px";
-            node.style.top = y + "px";
-            resizeFreeCanvas(item.group);
+            state.layout[item.id]={...pos,x,y};
+            state.freePriority[item.group]=item.id;
+            layoutFreeWidgets(item.group);
             save();
             return;
         }
@@ -345,6 +350,13 @@ function createCard(item) {
         e.preventDefault();e.stopPropagation();
         const box=node.getBoundingClientRect();
         resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height};
+        if (isFree(item.group)) {
+            freePins.set(item.group,{
+                id:item.id,
+                x:Number.parseFloat(node.style.left)||0,
+                y:Number.parseFloat(node.style.top)||0
+            });
+        }
         corner.setPointerCapture(e.pointerId);
         corner.classList.add("is-resizing");
     });
@@ -353,12 +365,13 @@ function createCard(item) {
         const parentWidth=regions[item.group].clientWidth||
             regions[item.group].parentElement.clientWidth-54;
         const usedX = isFree(item.group)
-            ? Number.parseFloat(node.style.left) || 0 : 0;
+            ? (freePins.get(item.group)?.x ??
+                (Number.parseFloat(node.style.left)||0)) : 0;
         node.style.width=Math.round(clamp(resizing.w+e.clientX-resizing.x,
             MIN_W,Math.max(MIN_W,parentWidth-usedX-2)))+"px";
         node.style.height=Math.round(clamp(resizing.h+e.clientY-resizing.y,
             MIN_H,MAX_H))+"px";
-        if (isFree(item.group)) resizeFreeCanvas(item.group);
+        if (isFree(item.group)) layoutFreeWidgets(item.group);
     });
     function finish() {
         if(!resizing)return;
@@ -367,8 +380,12 @@ function createCard(item) {
         state.layout[item.id]={...(state.layout[item.id]||{}),
             width:Math.round(node.getBoundingClientRect().width),
             height:Math.round(node.getBoundingClientRect().height)};
+        if (isFree(item.group)) {
+            state.freePriority[item.group]=item.id;
+            freePins.delete(item.group);
+            layoutFreeWidgets(item.group);
+        }
         save();
-        if (isFree(item.group)) resizeFreeCanvas(item.group);
     }
     corner.addEventListener("pointerup",finish);
     corner.addEventListener("pointercancel",finish);
@@ -398,6 +415,79 @@ function resizeFreeCanvas(group) {
     region.style.height = Math.ceil(bottom) + "px";
 }
 
+// Resolve saved Free positions without rewriting the position of any
+// other widget. Moving/resizing one widget takes priority; neighbors use
+// the closest non-overlapping place. Sidebar width changes are temporary.
+function layoutFreeWidgets(group) {
+    if (!isFree(group)) return;
+    const region=regions[group];
+    // Hidden parent card: wait until its Widgets view becomes visible.
+    if (!region.clientWidth) return;
+    const width=Math.max(1,region.clientWidth);
+    const active=freePins.get(group);
+    const prioritized=active?.id || state.freePriority[group];
+    const order=state.selected[group]||[];
+    const widgets=[];
+    for (let index=0;index<order.length;index++) {
+        const id=order[index],card=cards.get(id);
+        if (!card || !card.node.isConnected) continue;
+        const node=card.node, box=node.getBoundingClientRect();
+        const w=Math.min(width,Math.max(1,box.width||
+            (Number.parseFloat(node.style.width)||MIN_W)));
+        const h=Math.max(1,box.height||
+            (Number.parseFloat(node.style.height)||MIN_H));
+        const saved=state.layout[id]||{};
+        const desired=active?.id===id ? active : saved;
+        widgets.push({id,node,index,w,h,
+            wantedX:clamp(Number(desired.x)||0,0,Math.max(0,width-w)),
+            wantedY:clamp(Number(desired.y)||0,0,10000)});
+    }
+    widgets.sort((a,b)=>
+        Number(b.id===prioritized)-Number(a.id===prioritized) ||
+        a.wantedY-b.wantedY || a.wantedX-b.wantedX ||
+        a.index-b.index);
+    const placed=[];
+    function collides(a,b) {
+        return a.x < b.x+b.w+FREE_GAP &&
+            a.x+a.w+FREE_GAP > b.x &&
+            a.y < b.y+b.h+FREE_GAP &&
+            a.y+a.h+FREE_GAP > b.y;
+    }
+    for(const item of widgets) {
+        const xs=new Set([item.wantedX,0,Math.max(0,width-item.w)]);
+        const ys=new Set([item.wantedY,0]);
+        for(const p of placed) {
+            xs.add(clamp(p.x+p.w+FREE_GAP,0,width-item.w));
+            xs.add(clamp(p.x-item.w-FREE_GAP,0,width-item.w));
+            ys.add(Math.min(10000,p.y+p.h+FREE_GAP));
+            ys.add(Math.max(0,p.y-item.h-FREE_GAP));
+        }
+        let best=null,score=Infinity;
+        for(const y of ys)for(const x of xs) {
+            const candidate={...item,x,y};
+            if(placed.some(p=>collides(candidate,p)))continue;
+            const distance=Math.abs(x-item.wantedX)*0.8+
+                Math.abs(y-item.wantedY)*1.2;
+            if(distance<score ||
+                (distance===score&&best&&y<best.y)) {
+                best=candidate;score=distance;
+            }
+        }
+        if(!best) {
+            const bottom=placed.length?
+                Math.max(...placed.map(p=>p.y+p.h)):0;
+            best={...item,x:0,
+                y:bottom+(placed.length?FREE_GAP:0)};
+        }
+        placed.push(best);
+    }
+    for(const p of placed) {
+        p.node.style.left=Math.round(p.x)+"px";
+        p.node.style.top=Math.round(p.y)+"px";
+    }
+    resizeFreeCanvas(group);
+}
+
 function syncFreeLayout(group) {
     const region = regions[group];
     const free = isFree(group);
@@ -411,6 +501,7 @@ function syncFreeLayout(group) {
     }
 
     if (!free) {
+        freePins.delete(group);
         region.style.removeProperty("height");
         for (const card of cards.values()) {
             if (card.item.group !== group) continue;
@@ -443,15 +534,8 @@ function syncFreeLayout(group) {
             state.layout[id] = { ...saved, x: 0, y: nextY };
             nextY += (Number.parseFloat(node.style.height) || MIN_H) + 12;
         }
-        const pos = state.layout[id];
-        // Never override a live drag when a new sensor snapshot arrives.
-        if (node.classList.contains("is-dragging")) continue;
-        const cardWidth = Number.parseFloat(node.style.width) || MIN_W;
-        node.style.left = Math.round(clamp(pos.x, 0,
-            Math.max(0, regionWidth - cardWidth))) + "px";
-        node.style.top = Math.round(Math.max(0, pos.y)) + "px";
     }
-    resizeFreeCanvas(group);
+    layoutFreeWidgets(group);
 }
 
 function setLayoutMode(group, mode) {
@@ -789,6 +873,8 @@ function resetGroupLayout(group) {
         if (id.startsWith(group + ":")) delete state.layout[id];
     }
     state.free[group] = false;
+    state.freePriority[group] = null;
+    freePins.delete(group);
 
     for (const card of cards.values()) {
         if (card.item.group !== group) continue;
