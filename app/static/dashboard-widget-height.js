@@ -71,6 +71,10 @@ function measure(entry) {
     for(const row of rows) {
         const target=Math.max(MIN_HEIGHT,Math.round(row.base+extra));
         for(const node of row.nodes) {
+            if (node.classList.contains("pw-mini-manual-height")) {
+                node.style.removeProperty(PROPERTY);
+                continue;
+            }
             const prior=parseFloat(node.style.getPropertyValue(PROPERTY));
             if(!Number.isFinite(prior)||Math.abs(prior-target)>1) {
                 node.style.setProperty(PROPERTY,target+"px");
@@ -108,6 +112,7 @@ if(typeof MutationObserver!=="undefined") {
 // Mini widget manual resizing and parent resizing both finish on pointerup.
 document.addEventListener("pointerup",schedule);
 document.addEventListener("pointercancel",schedule);
+window.addEventListener("pw-mini-widget-resized",schedule);
 window.addEventListener("resize",schedule);
 window.addEventListener("pw-overview-card-order-changed",schedule);
 schedule();
