@@ -22,7 +22,10 @@ try {
     const stored = localStorage.getItem(MODE_KEY);
     // The mode is JSON encoded; older unquoted values also remain valid.
     if (stored === "free" || stored === '"free"') mode = "free";
-    const last = localStorage.getItem(LAST_MOVED_KEY);
+    const lastRaw = localStorage.getItem(LAST_MOVED_KEY);
+    let last = lastRaw;
+    try { last = JSON.parse(lastRaw || "null"); }
+    catch (error) { /* Accept older unquoted identifiers. */ }
     if (ids.includes(last)) lastMoved = last;
     const data = JSON.parse(localStorage.getItem(POSITION_KEY) || "{}");
     if (data && typeof data === "object" && !Array.isArray(data)) {
