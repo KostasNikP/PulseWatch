@@ -581,6 +581,42 @@ window.addEventListener("resize", () => {
     }
 });
 
+// A parent card can also change width without a window resize while its
+// own corner is being dragged. Observe WIDTH only: changing canvas height
+// must not create a feedback loop.
+if (typeof ResizeObserver !== "undefined") {
+    const groupByRegion=new Map(GROUPS.map(group=>[regions[group],group]));
+    const widths=new WeakMap();
+    const observer=new ResizeObserver(entries=>{
+        for (const entry of entries) {
+            const region=entry.target,group=groupByRegion.get(region);
+            const width=entry.contentRect.width;
+            if (!group || Math.abs(width-(widths.get(region)??-1))<1) continue;
+            widths.set(region,width);
+            if (isFree(group)) requestAnimationFrame(()=>syncFreeLayout(group));
+        }
+    });
+    for (const group of GROUPS) observer.observe(regions[group]);
+}
+// Reapply Free positions when returning to Widgets from Graph/Gauge mode.
+if (typeof MutationObserver !== "undefined") {
+    const observer=new MutationObserver(records=>{
+        for(const record of records) {
+            const card=record.target;
+            if(card.dataset.view!=="widgets")continue;
+            const region=card.querySelector(".pw-mini-region");
+            const group=GROUPS.find(g=>regions[g]===region);
+            if(group && isFree(group)) requestAnimationFrame(()=>syncFreeLayout(group));
+        }
+    });
+    for(const group of GROUPS) {
+        const parent=regions[group].closest(".pw3-cpu-card,.pw3-gpu-card,.pw-extra-card");
+        if(parent)observer.observe(parent,{
+            attributes:true,attributeFilter:["data-view"]
+        });
+    }
+}
+
 // Change only the order array. Width, height, selected sensors and graphs
 // are preserved because each widget DOM node remains mounted.
 function moveWidget(group, movingId, targetId, after) {
