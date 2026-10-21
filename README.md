@@ -44,6 +44,7 @@ Track CPU, memory, and network activity with real-time and historical performanc
 - Reorder the six main dashboard cards by dragging their handles, or use Move earlier / Move later; card order is saved locally.
 - Choose **Smart Layout** to automatically pack cards into available space, or **Free Layout** to drag cards to any position with optional gaps.
 - Keep Free positions and Smart card order independently between launches; reset Free positions without deleting sensor settings.
+- Free Layout automatically avoids card overlaps when opening/collapsing the sidebar, resizing the window, or dragging a card over another; stored positions are preserved when only the workspace width changes.
 - Add or hide sensor mini-widgets; change their order, size, and display format.
 - Choose **Auto** or **Free** widget arrangement.
 - Save layout preferences between application launches.
