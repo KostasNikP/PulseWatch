@@ -194,6 +194,9 @@ function createCard(item) {
         (Number.isFinite(previous.height) && previous.height>=MIN_H)) {
         node.classList.add("pw-mini-manual-height");
     }
+    if (previous.manualWidth===true) {
+        node.classList.add("pw-mini-manual-width");
+    }
 
     const card={item,node,stat,value,extrema,graph,gauge,gaugeValue,
         bigValue,line,area,button,mode:"graph",samples:[],lastTime:null};
@@ -357,7 +360,8 @@ function createCard(item) {
         resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height,
             previousWidth:node.style.width,previousHeight:node.style.height,
             wasManual:node.classList.contains("pw-mini-manual-height"),
-            changed:false};
+            wasManualWidth:node.classList.contains("pw-mini-manual-width"),
+            widthChanged:false,changed:false};
         // A manual gesture must not be blocked by the Auto filler's
         // temporary min-height. Lock the currently visible height first
         // so the widget does not jump when the filler is removed.
@@ -388,6 +392,12 @@ function createCard(item) {
         // Vertical-only resizing must not freeze an Auto widget's
         // responsive column width to its current stretched pixel width.
         if (Math.abs(dx)>=2) {
+            // Auto normally sets a column minimum and lets each sensor
+            // stretch. During an intentional horizontal resize the saved
+            // pixel width must win, including when shrinking below that
+            // automatic column width.
+            resizing.widthChanged=true;
+            node.classList.add("pw-mini-manual-width");
             node.style.width=Math.round(clamp(resizing.w+dx,
                 MIN_W,Math.max(MIN_W,parentWidth-usedX-2)))+"px";
         }
@@ -407,12 +417,14 @@ function createCard(item) {
             node.style.width=session.previousWidth;
             node.style.height=session.previousHeight;
             node.classList.toggle("pw-mini-manual-height",session.wasManual);
+            node.classList.toggle("pw-mini-manual-width",session.wasManualWidth);
         } else {
             state.layout[item.id]={...(state.layout[item.id]||{}),
                 width:Math.round(parseFloat(node.style.width)||
                     node.getBoundingClientRect().width),
                 height:Math.round(node.getBoundingClientRect().height),
-                manualHeight:true};
+                manualHeight:true,
+                manualWidth:session.widthChanged||session.wasManualWidth};
         }
         if (isFree(item.group)) {
             if (commit) state.freePriority[item.group]=item.id;
@@ -955,7 +967,7 @@ function resetGroupLayout(group) {
             Math.max(MIN_W, regions[group].parentElement.clientWidth - 54);
         node.style.width = Math.min(265, Math.max(MIN_W, availableWidth - 2)) + "px";
         node.style.height = "198px";
-        node.classList.remove("pw-mini-manual-height");
+        node.classList.remove("pw-mini-manual-height","pw-mini-manual-width");
         node.style.removeProperty("--pw-auto-widget-min-height");
         node.style.removeProperty("left");
         node.style.removeProperty("top");
