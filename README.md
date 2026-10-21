@@ -41,6 +41,8 @@ Track CPU, memory, and network activity with real-time and historical performanc
 - Six groups: **CPU, GPU, RAM, Storage, Network, and Motherboard**.
 - Choose **Gauge**, **Graph**, **Compact**, or **Widgets** for each group.
 - Resize parent cards freely and retain their individual dimensions.
+- Adapt CPU/GPU and other overview Graph displays to the available parent-card height, and let Auto sensor widgets share unused row width without changing their saved sizes.
+- Update Chart.js canvas sizes when a card is resized directly.
 - Reorder the six main dashboard cards by dragging their handles, or use Move earlier / Move later; card order is saved locally.
 - Choose **Smart Layout** to automatically pack cards into available space, or **Free Layout** to drag cards to any position with optional gaps.
 - Keep Free positions and Smart card order independently between launches; reset Free positions without deleting sensor settings.
