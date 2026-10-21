@@ -15,6 +15,11 @@
 .overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget {
     min-height:max(155px,var(--pw-auto-widget-min-height,155px));
 }
+/* Once the user resizes an individual widget, its saved inline height wins
+   over automatic vertical fill. The minimum remains the standard 155px. */
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget.pw-mini-manual-height {
+    min-height:155px;
+}
 /* Preserve natural heights and absolute coordinates in Free widget mode. */
 .overview-section .dashboard > [data-view="widgets"] .pw-mini-region.pw-mini-free > .pw-mini-widget {
     min-height:155px;
