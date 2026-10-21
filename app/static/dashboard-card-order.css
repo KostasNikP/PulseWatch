@@ -1,0 +1,77 @@
+/* Reordering the six parent dashboard cards */
+.overview-section .dashboard :is(.pw3-cpu-title,.pw3-gpu-header > div:first-child,.pw-extra-heading) > h3 {
+    display:inline-block;
+    vertical-align:middle;
+}
+.pw-card-drag-handle {
+    display:inline-flex;
+    vertical-align:middle;
+    align-items:center;
+    justify-content:center;
+    width:29px;
+    height:29px;
+    margin-left:9px;
+    padding:0;
+    border-radius:8px;
+    border:1px solid #44596e;
+    background:#172635;
+    color:#aac8e3;
+    font:22px/1 sans-serif;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+}
+.pw-card-drag-handle:hover {color:#e6f8ff;border-color:#49c9fb;background:#193a51;}
+.pw-card-drag-handle:focus-visible {outline:2px solid #49c9fb;outline-offset:2px;}
+.pw-card-drag-handle:active,.pw-card-reordering .pw-card-drag-handle {cursor:grabbing;}
+.overview-section .dashboard > .pw-card-is-dragging {opacity:.58;}
+.overview-section .dashboard > .pw-card-drop-before {
+    outline:2px solid #49c9fb;
+    outline-offset:2px;
+    box-shadow:inset 0 6px 0 #49c9fb70;
+}
+.overview-section .dashboard > .pw-card-drop-after {
+    outline:2px solid #49c9fb;
+    outline-offset:2px;
+    box-shadow:inset 0 -6px 0 #49c9fb70;
+}
+.pw-card-order-controls {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid #344658;
+}
+.pw-card-order-controls > span {
+    color:#adc9dc;
+    font-size:11px;
+    font-weight:700;
+}
+.pw-card-order-controls > button {
+    width:100%;
+    padding:8px 10px;
+    border:1px solid #405870;
+    background:#16293a;
+    color:#dceefc;
+    font:12px/1.25 inherit;
+    border-radius:7px;
+    text-align:left;
+    cursor:pointer;
+}
+.pw-card-order-controls > button:hover:not(:disabled) {
+    background:#244761;
+    border-color:#63c7fc;
+}
+.pw-card-order-controls > button:disabled {opacity:.4;cursor:not-allowed;}
+.pw-card-reorder-status {
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+}
