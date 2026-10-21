@@ -1,0 +1,19 @@
+/* RigObserver adaptive Auto layout for individual sensor widgets.
+   Each row gets readable columns; Free layout keeps exact custom geometry. */
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) {
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0;
+}
+.overview-section .dashboard > [data-view="widgets"] .pw-mini-region:not(.pw-mini-free) > .pw-mini-widget {
+    box-sizing:border-box;
+    /* JS picks the best number of readable columns for actual card width
+       and sensor count. Inline saved widths are never overwritten. */
+    min-width:min(var(--pw-auto-column-width,275px),100%);
+    flex-grow:1;
+    flex-shrink:0;
+    max-width:100%;
+}
