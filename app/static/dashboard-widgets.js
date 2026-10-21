@@ -356,7 +356,8 @@ function createCard(item) {
         const box=node.getBoundingClientRect();
         resizing={id:e.pointerId,x:e.clientX,y:e.clientY,w:box.width,h:box.height,
             previousWidth:node.style.width,previousHeight:node.style.height,
-            wasManual:node.classList.contains("pw-mini-manual-height")};
+            wasManual:node.classList.contains("pw-mini-manual-height"),
+            changed:false};
         // A manual gesture must not be blocked by the Auto filler's
         // temporary min-height. Lock the currently visible height first
         // so the widget does not jump when the filler is removed.
@@ -375,6 +376,9 @@ function createCard(item) {
     });
     corner.addEventListener("pointermove",e=>{
         if(!resizing||e.pointerId!==resizing.id)return;
+        if (Math.hypot(e.clientX-resizing.x,e.clientY-resizing.y)<2 &&
+            !resizing.changed) return;
+        resizing.changed=true;
         const parentWidth=regions[item.group].clientWidth||
             regions[item.group].parentElement.clientWidth-54;
         const usedX = isFree(item.group)
@@ -391,6 +395,7 @@ function createCard(item) {
         const session=resizing;
         resizing=null;
         corner.classList.remove("is-resizing");
+        commit=commit&&session.changed;
         if (!commit) {
             node.style.width=session.previousWidth;
             node.style.height=session.previousHeight;
