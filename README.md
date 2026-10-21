@@ -41,6 +41,7 @@ Track CPU, memory, and network activity with real-time and historical performanc
 - Six groups: **CPU, GPU, RAM, Storage, Network, and Motherboard**.
 - Choose **Gauge**, **Graph**, **Compact**, or **Widgets** for each group.
 - Resize parent cards freely and retain their individual dimensions.
+- Reorder the six main dashboard cards by dragging their handles, or use Move earlier / Move later; card order is saved locally.
 - Add or hide sensor mini-widgets; change their order, size, and display format.
 - Choose **Auto** or **Free** widget arrangement.
 - Save layout preferences between application launches.
