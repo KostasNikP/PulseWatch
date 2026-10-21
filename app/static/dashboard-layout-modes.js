@@ -109,7 +109,7 @@ function drawFree(priorityId = lastMoved) {
     // cards yield to it instead of overlapping. Normal layout prioritizes
     // the user's original top-to-bottom, left-to-right arrangement.
     items.sort((a,b)=>
-        (a.id===priorityId ? -1 : b.id===priorityId ? 1 : 0) ||
+        Number(b.id===priorityId)-Number(a.id===priorityId) ||
         a.preferred.y-b.preferred.y ||
         a.preferred.x-b.preferred.x || a.index-b.index);
     const placed=[];
