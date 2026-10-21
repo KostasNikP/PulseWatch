@@ -1,0 +1,105 @@
+/* RigObserver UI polish: readable sensor text and comfortable hit targets.
+   Layout, card geometry, modes, and user-defined widget sizes are unchanged. */
+
+/* Sensor cards: lift the smallest text without oversizing the live readings. */
+.overview-section .dashboard .pw-mini-widget .pw-mini-header {
+    align-items:center;
+    gap:5px;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-title strong {
+    font-size:13px;
+    line-height:1.3;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-title small {
+    font-size:11px;
+    line-height:1.3;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-extrema {
+    font-size:11px;
+    line-height:1.35;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-buttons {
+    flex:0 0 auto;
+    align-items:center;
+    gap:4px;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-grip {
+    box-sizing:border-box;
+    display:inline-flex;
+    flex:0 0 18px;
+    align-items:center;
+    justify-content:center;
+    min-height:29px;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-mode {
+    box-sizing:border-box;
+    min-height:29px;
+    padding:4px 6px;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.2;
+    white-space:nowrap;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-hide {
+    box-sizing:border-box;
+    flex:0 0 29px;
+    width:29px;
+    height:29px;
+    min-height:29px;
+    padding:0;
+    font-size:17px;
+    line-height:1;
+}
+.overview-section .dashboard .pw-mini-widget .pw-mini-corner {
+    width:29px;
+    height:29px;
+}
+/* Allow smaller values to wrap cleanly instead of clipping at 185px. */
+.overview-section .dashboard .pw-mini-widget .pw-mini-stat {
+    row-gap:4px;
+}
+
+/* Parent card view selectors: clear labels, a predictable click target. */
+.overview-section .dashboard .pw3-view-switch button {
+    box-sizing:border-box;
+    min-height:33px;
+    padding:7px 10px;
+    font-size:12px;
+    line-height:1.2;
+}
+.overview-section .dashboard .pw-overview-options > summary {
+    box-sizing:border-box;
+    width:35px;
+    height:35px;
+}
+.overview-section .dashboard .pw-options-title {
+    font-size:12px;
+}
+.overview-section .dashboard .pw-overview-options .pw-mini-layout-controls button {
+    box-sizing:border-box;
+    min-height:36px;
+    font-size:12px;
+    line-height:1.3;
+}
+
+/* Edit/customize dialogs: align supporting labels with the sensor text. */
+.pw-customize-dialog .pw-customize-details strong,
+.pw-hardware-dialog .pw-hardware-device-choice strong {
+    font-size:13px;
+    line-height:1.35;
+}
+.pw-customize-dialog .pw-customize-details small,
+.pw-hardware-dialog .pw-hardware-device-choice small {
+    font-size:11px;
+    line-height:1.4;
+}
+.pw-customize-dialog .pw-customize-nav button {
+    font-size:13px;
+}
+
+/* Clear focus even in the compact card menus. */
+.overview-section .dashboard .pw-mini-widget :is(.pw-mini-mode,.pw-mini-hide,.pw-mini-corner):focus-visible,
+.overview-section .dashboard .pw3-view-switch button:focus-visible {
+    outline:2px solid #7bd7fb;
+    outline-offset:2px;
+}
