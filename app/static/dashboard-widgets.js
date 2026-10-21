@@ -384,10 +384,17 @@ function createCard(item) {
         const usedX = isFree(item.group)
             ? (freePins.get(item.group)?.x ??
                 (Number.parseFloat(node.style.left)||0)) : 0;
-        node.style.width=Math.round(clamp(resizing.w+e.clientX-resizing.x,
-            MIN_W,Math.max(MIN_W,parentWidth-usedX-2)))+"px";
-        node.style.height=Math.round(clamp(resizing.h+e.clientY-resizing.y,
-            MIN_H,MAX_H))+"px";
+        const dx=e.clientX-resizing.x,dy=e.clientY-resizing.y;
+        // Vertical-only resizing must not freeze an Auto widget's
+        // responsive column width to its current stretched pixel width.
+        if (Math.abs(dx)>=2) {
+            node.style.width=Math.round(clamp(resizing.w+dx,
+                MIN_W,Math.max(MIN_W,parentWidth-usedX-2)))+"px";
+        }
+        if (Math.abs(dy)>=2) {
+            node.style.height=Math.round(clamp(resizing.h+dy,
+                MIN_H,MAX_H))+"px";
+        }
         if (isFree(item.group)) layoutFreeWidgets(item.group);
     });
     function finish(commit=true) {
@@ -402,7 +409,8 @@ function createCard(item) {
             node.classList.toggle("pw-mini-manual-height",session.wasManual);
         } else {
             state.layout[item.id]={...(state.layout[item.id]||{}),
-                width:Math.round(node.getBoundingClientRect().width),
+                width:Math.round(parseFloat(node.style.width)||
+                    node.getBoundingClientRect().width),
                 height:Math.round(node.getBoundingClientRect().height),
                 manualHeight:true};
         }
